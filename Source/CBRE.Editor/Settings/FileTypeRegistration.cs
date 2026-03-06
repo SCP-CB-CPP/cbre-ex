@@ -14,7 +14,7 @@ namespace CBRE.Editor.Settings
         {
             return new[]
             {
-                new FileType(".cbr", "Containment Breach Room", false, true),
+                new FileType(".cbr", "Containment Breach Room", true, true),
                 new FileType(".vmf", "Valve Map File", true, true),
                 new FileType(".3dw", "Leadwerks 3D World Studio File", false, true),
                 new FileType(".msl", "Mapscape 2 Level", false, true),
