@@ -885,10 +885,6 @@
       <Project>{a79ff02f-3eaa-4ff1-a060-2e2ffe983ef3}</Project>
       <Name>CBRE.Settings</Name>
     </ProjectReference>
-    <ProjectReference Include="..\CBRE.SMFConverter\CBRE.SMFConverter.csproj">
-      <Project>{e4242c98-6ae0-487b-86b2-031867444865}</Project>
-      <Name>CBRE.SMFConverter</Name>
-    </ProjectReference>
     <ProjectReference Include="..\CBRE.UI\CBRE.UI.csproj">
       <Project>{abbee97f-b5a6-4ed6-8d8f-6d4091fb9d44}</Project>
       <Name>CBRE.UI</Name>
@@ -897,18 +893,18 @@
   <Choose>
     <When Condition="'$(Platform)' == 'x86'">
       <ItemGroup>
-        <PackageReference Include="Facepunch.Steamworks.Dll" Version="1.48.0"/>
-        <PackageReference Include="Facepunch.Steamworks.win32" Version="2.3.3"/>
+        <PackageReference Include="Facepunch.Steamworks.Dll" Version="1.48.0" />
+        <PackageReference Include="Facepunch.Steamworks.win32" Version="2.3.3" />
       </ItemGroup>
     </When>
   </Choose>
   <Choose>
     <When Condition="'$(Platform)' == 'x64'">
       <ItemGroup>
-        <PackageReference Include="Facepunch.Steamworks" Version="2.3.3"/>
-        <PackageReference Include="Facepunch.Steamworks.Library" Version="2.3.3"/>
+        <PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
+        <PackageReference Include="Facepunch.Steamworks.Library" Version="2.3.3" />
       </ItemGroup>
-  </When>
+    </When>
   </Choose>
   <ItemGroup>
     <PackageReference Include="DiscordRichPresence" Version="1.1.4.20" />

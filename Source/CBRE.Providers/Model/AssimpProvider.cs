@@ -1,4 +1,5 @@
-﻿using Assimp;
+﻿using System;
+using Assimp;
 using CBRE.DataStructures.Geometric;
 using CBRE.DataStructures.MapObjects;
 using CBRE.DataStructures.Models;
@@ -7,6 +8,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Numerics;
+using System.Runtime.InteropServices;
+using Assimp.Unmanaged;
 using Face = CBRE.DataStructures.MapObjects.Face;
 using Mesh = Assimp.Mesh;
 using Path = System.IO.Path;
@@ -21,6 +25,7 @@ namespace CBRE.Providers.Model
         {
             return file.Extension.ToLowerInvariant() == "b3d" ||
                    file.Extension.ToLowerInvariant() == "fbx" ||
+                   file.Extension.ToLowerInvariant() == "glb" ||
                    file.Extension.ToLowerInvariant() == "x";
         }
 
@@ -48,17 +53,17 @@ namespace CBRE.Providers.Model
         {
             DataStructures.Models.Mesh sledgeMesh = new DataStructures.Models.Mesh(0);
             List<MeshVertex> vertices = new List<MeshVertex>();
-            List<Vector3D> normals = new List<Vector3D>();
+            List<Vector3> normals = new List<Vector3>();
             if (assimpMesh.HasNormals)
             {
                 normals.AddRange(assimpMesh.Normals);
             }
             else
             {
-                List<Vector3D> assimpVertices = assimpMesh.Vertices;
+                List<Vector3> assimpVertices = assimpMesh.Vertices;
                 for (int i = 0; i < assimpMesh.VertexCount; i++)
                 {
-                    normals.Add(new Vector3D(0, 0, 0));
+                    normals.Add(new Vector3(0, 0, 0));
                 }
 
                 foreach (Assimp.Face face in assimpMesh.Faces)
@@ -66,8 +71,8 @@ namespace CBRE.Providers.Model
                     List<int> triInds = face.Indices;
                     for (int i = 1; i < triInds.Count - 1; i++)
                     {
-                        Vector3D normal = Vector3D.Cross(assimpVertices[triInds[0]] - assimpVertices[triInds[i]], assimpVertices[triInds[0]] - assimpVertices[triInds[i + 1]]);
-                        normal.Normalize();
+                        Vector3 normal = Vector3.Normalize(
+                            Vector3.Cross(assimpVertices[triInds[0]] - assimpVertices[triInds[i]], assimpVertices[triInds[0]] - assimpVertices[triInds[i + 1]]));
 
                         normals[triInds[0]] += normal;
                         normals[triInds[i]] += normal;
@@ -77,17 +82,17 @@ namespace CBRE.Providers.Model
 
                 for (int i = 0; i < assimpMesh.VertexCount; i++)
                 {
-                    normals[i].Normalize();
+                    normals[i] = Vector3.Normalize(normals[i]);
                 }
             }
 
             for (int i = 0; i < assimpMesh.VertexCount; i++)
             {
-                Vector3D assimpVertex = assimpMesh.Vertices[i];
-                assimpVertex = selfMatrix * assimpVertex;
-                Vector3D assimpNormal = normals[i];
-                assimpNormal = selfMatrix * assimpNormal;
-                Vector3D assimpUv = assimpMesh.TextureCoordinateChannels[0][i];
+                Vector3 assimpVertex = assimpMesh.Vertices[i];
+                assimpVertex = Vector3.Transform(assimpVertex, selfMatrix);
+                Vector3 assimpNormal = normals[i];
+                assimpNormal = Vector3.TransformNormal(assimpNormal, selfMatrix);
+                Vector3 assimpUv = assimpMesh.TextureCoordinateChannels[0][i];
 
                 vertices.Add(new MeshVertex(new CoordinateF(assimpVertex.X, -assimpVertex.Z, assimpVertex.Y),
                                             new CoordinateF(assimpNormal.X, -assimpNormal.Z, assimpNormal.Y),
@@ -120,7 +125,7 @@ namespace CBRE.Providers.Model
             DataStructures.Models.Bone bone = new DataStructures.Models.Bone(0, -1, null, "rootBone", CoordinateF.Zero, CoordinateF.Zero, CoordinateF.One, CoordinateF.One);
             model.Bones.Add(bone);
 
-            Scene scene = importer.ImportFile(file.FullPathName);
+            Scene scene = importer.ImportFile(file.FullPathName, PostProcessPreset.TargetRealTimeMaximumQuality);
 
             DataStructures.Models.Texture tex = null;
 
@@ -207,7 +212,7 @@ namespace CBRE.Providers.Model
                     Assimp.TextureWrapMode.Wrap,
                     Assimp.TextureWrapMode.Wrap,
                     0);
-                material.AddMaterialTexture(ref textureSlot);
+                material.AddMaterialTexture(textureSlot);
                 scene.Materials.Add(material);
 
                 mesh = new Mesh();
@@ -229,9 +234,9 @@ namespace CBRE.Providers.Model
                 {
                     foreach (Vertex v in face.Vertices)
                     {
-                        mesh.Vertices.Add(new Vector3D((float)v.Location.X, (float)v.Location.Z, (float)v.Location.Y));
-                        mesh.Normals.Add(new Vector3D((float)face.Plane.Normal.X, (float)face.Plane.Normal.Z, (float)face.Plane.Normal.Y));
-                        mesh.TextureCoordinateChannels[0].Add(new Vector3D((float)v.TextureU, (float)v.TextureV, 0));
+                        mesh.Vertices.Add(new Vector3((float)v.Location.X, (float)v.Location.Z, (float)v.Location.Y));
+                        mesh.Normals.Add(new Vector3((float)face.Plane.Normal.X, (float)face.Plane.Normal.Z, (float)face.Plane.Normal.Y));
+                        mesh.TextureCoordinateChannels[0].Add(new Vector3((float)v.TextureU, (float)v.TextureV, 0));
                     }
                     mesh.UVComponentCount[0] = 2;
                     foreach (uint ind in face.GetTriangleIndices())

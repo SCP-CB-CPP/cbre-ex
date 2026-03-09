@@ -16,7 +16,7 @@ namespace CBRE.Settings
         }
 
         private static readonly string[] TextureExtensions = { "jpeg", "jpg", "png" };
-        private static readonly string[] ModelExtensions = { "fbx", "x", "b3d" };
+        private static readonly string[] ModelExtensions = { "glb", "fbx", "x", "b3d" };
 
         public static string GetTextureExtension(string filename)
         {
