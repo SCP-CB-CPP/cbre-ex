@@ -108,6 +108,7 @@ namespace CBRE.DataStructures.GameData
             lightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
             lightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
             lightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
+            lightDataObj.Properties.Add(new Property("castshadows", VariableType.Bool) { ShortDescription = "Cast shadows", DefaultValue = "Yes" });
             lightDataObj.Properties.Add(new Property("size", VariableType.Float) { ShortDescription = "Size", DefaultValue = "0.0",
                 Description = "Controls shadow softness, larger values result in softer shadows." });
             lightDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/lightbulb"));
@@ -118,6 +119,7 @@ namespace CBRE.DataStructures.GameData
             spotlightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
             spotlightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
             spotlightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
+            spotlightDataObj.Properties.Add(new Property("castshadows", VariableType.Bool) { ShortDescription = "Cast shadows", DefaultValue = "Yes" });
             spotlightDataObj.Properties.Add(new Property("innerconeangle", VariableType.Float) { ShortDescription = "Inner cone angle", DefaultValue = "45" });
             spotlightDataObj.Properties.Add(new Property("outerconeangle", VariableType.Float) { ShortDescription = "Outer cone angle", DefaultValue = "90" });
             spotlightDataObj.Properties.Add(new Property("angles", VariableType.Vector) { ShortDescription = "Rotation", DefaultValue = "0 0 0" });
