@@ -16,6 +16,8 @@ namespace CBRE.Editor.Compiling.Lightmap
         public bool HasSprite;
         public CoordinateF Origin;
         public float Range;
+        public float Radius;
+        public int LightSeparation;
 
         public CoordinateF Direction;
         public float? innerCos;
@@ -37,6 +39,16 @@ namespace CBRE.Editor.Compiling.Lightmap
                     {
                         range = 100.0f;
                     }
+                    float radius;
+                    if (!float.TryParse(x.EntityData.GetPropertyValue("radius"), out radius))
+                    {
+                        radius = 0f;
+                    }
+                    int lightSeparation;
+                    if (!int.TryParse(x.EntityData.GetPropertyValue("lightSeparation"), out lightSeparation))
+                    {
+                        lightSeparation = 1;
+                    }
                     float intensity;
                     if (!float.TryParse(x.EntityData.GetPropertyValue("intensity"), out intensity))
                     {
@@ -51,6 +63,8 @@ namespace CBRE.Editor.Compiling.Lightmap
                     {
                         Origin = new CoordinateF(x.Origin),
                         Range = range,
+                        Radius = radius,
+                        LightSeparation = lightSeparation,
                         Color = new CoordinateF(c.R, c.G, c.B),
                         Intensity = intensity,
                         HasSprite = hasSprite,
@@ -66,6 +80,16 @@ namespace CBRE.Editor.Compiling.Lightmap
                     if (!float.TryParse(x.EntityData.GetPropertyValue("range"), out range))
                     {
                         range = 100.0f;
+                    }
+                    float radius;
+                    if (!float.TryParse(x.EntityData.GetPropertyValue("radius"), out radius))
+                    {
+                        radius = 0f;
+                    }
+                    int lightSeparation;
+                    if (!int.TryParse(x.EntityData.GetPropertyValue("lightSeparation"), out lightSeparation))
+                    {
+                        lightSeparation = 1;
                     }
                     float intensity;
                     if (!float.TryParse(x.EntityData.GetPropertyValue("intensity"), out intensity))
@@ -90,6 +114,8 @@ namespace CBRE.Editor.Compiling.Lightmap
                     {
                         Origin = new CoordinateF(x.Origin),
                         Range = range,
+                        Radius = radius,
+                        LightSeparation = lightSeparation,
                         Color = new CoordinateF(c.R, c.G, c.B),
                         Intensity = intensity,
                         HasSprite = hasSprite,
@@ -111,6 +137,60 @@ namespace CBRE.Editor.Compiling.Lightmap
 
                     return light;
                 }));
+        }
+
+        public static List<Light> CalculateSoftLights(List<Light> lightEntities)
+        {
+            List<Light> newLightEntities = new List<Light>(lightEntities);
+            int i = -1;
+            foreach (Light light in lightEntities)
+            {
+                i++;
+                if (light.Radius <= 0) continue;
+
+                int totalLights = 1;
+
+                List<Light> softLights = new List<Light>();
+
+                int r = (int)Math.Floor(light.Radius);
+                for (int x = -r; x <= r; x += light.LightSeparation)
+                {
+                    for (int y = -r; y <= r; y += light.LightSeparation)
+                    {
+                        for (int z = -r; z <= r; z += light.LightSeparation)
+                        {
+                            if (x == 0 && y == 0 && z == 0) continue;
+                            if (x * x + y * y + z * z <= r * r)
+                            {
+                                Light newSoftLight = new Light();
+                                newSoftLight.Color = light.Color;
+                                newSoftLight.HasSprite = false;
+                                newSoftLight.Range = light.Range;
+                                newSoftLight.Radius = 0f;
+                                newSoftLight.LightSeparation = 1;
+                                newSoftLight.Direction = light.Direction;
+                                newSoftLight.innerCos = light.innerCos;
+                                newSoftLight.outerCos = light.outerCos;
+
+                                CoordinateF newOrigin = light.Origin;
+                                newOrigin += new CoordinateF(x, y, z);
+                                newSoftLight.Origin = newOrigin;
+
+                                softLights.Add(newSoftLight);
+                                totalLights++;
+                            }
+                        }
+                    }
+                }
+
+                foreach (Light softLight in softLights)
+                {
+                    softLight.Intensity = light.Intensity / totalLights;
+                    newLightEntities.Add(softLight);
+                }
+                light.Intensity = light.Intensity / totalLights;
+            }
+            return newLightEntities;
         }
     }
 }

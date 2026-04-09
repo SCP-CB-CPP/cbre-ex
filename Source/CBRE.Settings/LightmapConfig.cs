@@ -20,6 +20,7 @@ namespace CBRE.Settings
         
         public static bool ViewAfterExport { get; set; }
         public static bool BakeModelShadows { get; set; }
+        public static bool RenderAdvancedLighting { get; set; }
 
         static LightmapConfig()
         {

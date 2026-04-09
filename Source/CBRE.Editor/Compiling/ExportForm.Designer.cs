@@ -45,15 +45,21 @@
             this.modelBakeYes = new System.Windows.Forms.RadioButton();
             this.modelBakeNo = new System.Windows.Forms.RadioButton();
             this.label7 = new System.Windows.Forms.Label();
+            this.advancedLightingNo = new System.Windows.Forms.RadioButton();
+            this.advancedLightingYes = new System.Windows.Forms.RadioButton();
+            this.label8 = new System.Windows.Forms.Label();
+            this.advancedLightingHelp = new System.Windows.Forms.Button();
             this.threadCount = new CBRE.UI.UnitedNumericUpDown();
             this.blurRadius = new CBRE.UI.UnitedNumericUpDown();
             this.downscaleFactor = new CBRE.UI.UnitedNumericUpDown();
             this.textureDims = new CBRE.UI.UnitedNumericUpDown();
+            this.panel2 = new System.Windows.Forms.Panel();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.threadCount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.blurRadius)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.downscaleFactor)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.textureDims)).BeginInit();
+            this.panel2.SuspendLayout();
             this.SuspendLayout();
             // 
             // label2
@@ -256,7 +262,6 @@
             this.modelBakeYes.Name = "modelBakeYes";
             this.modelBakeYes.Size = new System.Drawing.Size(42, 19);
             this.modelBakeYes.TabIndex = 11;
-            this.modelBakeYes.TabStop = true;
             this.modelBakeYes.Text = "Yes";
             this.modelBakeYes.UseVisualStyleBackColor = true;
             this.modelBakeYes.CheckedChanged += new System.EventHandler(this.modelBakeYes_CheckedChanged);
@@ -271,7 +276,6 @@
             this.modelBakeNo.Name = "modelBakeNo";
             this.modelBakeNo.Size = new System.Drawing.Size(41, 19);
             this.modelBakeNo.TabIndex = 12;
-            this.modelBakeNo.TabStop = true;
             this.modelBakeNo.Text = "No";
             this.modelBakeNo.UseVisualStyleBackColor = true;
             // 
@@ -284,6 +288,52 @@
             this.label7.Size = new System.Drawing.Size(105, 15);
             this.label7.TabIndex = 24;
             this.label7.Text = "Max Thread Count";
+            // 
+            // advancedLightingNo
+            // 
+            this.advancedLightingNo.AutoSize = true;
+            this.advancedLightingNo.Checked = true;
+            this.advancedLightingNo.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.advancedLightingNo.Location = new System.Drawing.Point(224, 1);
+            this.advancedLightingNo.Margin = new System.Windows.Forms.Padding(3, 3, 3, 6);
+            this.advancedLightingNo.Name = "advancedLightingNo";
+            this.advancedLightingNo.Size = new System.Drawing.Size(41, 19);
+            this.advancedLightingNo.TabIndex = 26;
+            this.advancedLightingNo.Text = "No";
+            this.advancedLightingNo.UseVisualStyleBackColor = true;
+            // 
+            // advancedLightingYes
+            // 
+            this.advancedLightingYes.AutoSize = true;
+            this.advancedLightingYes.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.advancedLightingYes.Location = new System.Drawing.Point(176, 1);
+            this.advancedLightingYes.Margin = new System.Windows.Forms.Padding(3, 3, 3, 6);
+            this.advancedLightingYes.Name = "advancedLightingYes";
+            this.advancedLightingYes.Size = new System.Drawing.Size(42, 19);
+            this.advancedLightingYes.TabIndex = 25;
+            this.advancedLightingYes.Text = "Yes";
+            this.advancedLightingYes.UseVisualStyleBackColor = true;
+            this.advancedLightingYes.CheckedChanged += new System.EventHandler(this.advancedLightingYes_CheckedChanged);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(-3, 3);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(147, 15);
+            this.label8.TabIndex = 27;
+            this.label8.Text = "Render Advanced Lighting";
+            // 
+            // advancedLightingHelp
+            // 
+            this.advancedLightingHelp.Location = new System.Drawing.Point(150, 1);
+            this.advancedLightingHelp.Name = "advancedLightingHelp";
+            this.advancedLightingHelp.Size = new System.Drawing.Size(20, 20);
+            this.advancedLightingHelp.TabIndex = 28;
+            this.advancedLightingHelp.Text = "?";
+            this.advancedLightingHelp.UseVisualStyleBackColor = true;
+            this.advancedLightingHelp.Click += new System.EventHandler(this.advancedLightingHelp_Click);
             // 
             // threadCount
             // 
@@ -396,11 +446,24 @@
             0});
             this.textureDims.ValueChanged += new System.EventHandler(this.textureDims_ValueChanged);
             // 
+            // panel2
+            // 
+            this.panel2.Controls.Add(this.label8);
+            this.panel2.Controls.Add(this.advancedLightingHelp);
+            this.panel2.Controls.Add(this.advancedLightingYes);
+            this.panel2.Controls.Add(this.advancedLightingNo);
+            this.panel2.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.panel2.Location = new System.Drawing.Point(346, 129);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(263, 20);
+            this.panel2.TabIndex = 29;
+            // 
             // ExportForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(628, 448);
+            this.Controls.Add(this.panel2);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.threadCount);
             this.Controls.Add(this.blurRadius);
@@ -436,6 +499,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.blurRadius)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.downscaleFactor)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.textureDims)).EndInit();
+            this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -467,5 +532,10 @@
         private CBRE.UI.UnitedNumericUpDown blurRadius;
         private CBRE.UI.UnitedNumericUpDown threadCount;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.RadioButton advancedLightingNo;
+        private System.Windows.Forms.RadioButton advancedLightingYes;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Button advancedLightingHelp;
+        private System.Windows.Forms.Panel panel2;
     }
 }

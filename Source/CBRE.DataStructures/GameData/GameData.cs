@@ -107,6 +107,8 @@ namespace CBRE.DataStructures.GameData
             lightDataObj.Properties.Add(new Property("color", VariableType.Color255) { ShortDescription = "Color", DefaultValue = "255 255 255" });
             lightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
             lightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
+            lightDataObj.Properties.Add(new Property("radius", VariableType.Float) { ShortDescription = "Radius", Description = "WARNING: This will radically increase compile times, please adjust soft light quality according to your needs and only use this on a final render.", DefaultValue = "0.0" });
+            lightDataObj.Properties.Add(new Property("lightSeparation", VariableType.Integer) { ShortDescription = "Soft Light Quality", Description = "Higher values indicate a lower quality.", DefaultValue = "2" });
             lightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
             lightDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/lightbulb"));
             Classes.Add(lightDataObj);
@@ -115,6 +117,8 @@ namespace CBRE.DataStructures.GameData
             spotlightDataObj.Properties.Add(new Property("color", VariableType.Color255) { ShortDescription = "Color", DefaultValue = "255 255 255" });
             spotlightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
             spotlightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
+            spotlightDataObj.Properties.Add(new Property("radius", VariableType.Float) { ShortDescription = "Radius", Description = "WARNING: This will radically increase compile times, please adjust soft light quality according to your needs and only use this on a final render.", DefaultValue = "0.0" });
+            spotlightDataObj.Properties.Add(new Property("lightSeparation", VariableType.Integer) { ShortDescription = "Soft Light Quality", Description = "Higher values indicate a lower quality.", DefaultValue = "2" });
             spotlightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
             spotlightDataObj.Properties.Add(new Property("innerconeangle", VariableType.Float) { ShortDescription = "Inner cone angle", DefaultValue = "45" });
             spotlightDataObj.Properties.Add(new Property("outerconeangle", VariableType.Float) { ShortDescription = "Outer cone angle", DefaultValue = "90" });

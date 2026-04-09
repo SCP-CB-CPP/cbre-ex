@@ -315,6 +315,19 @@ namespace CBRE.Editor.Compiling.Lightmap
 
             UpdateProgress(exportForm, "Finding light entities...", 0.04f);
             Light.FindLights(map, out lightEntities);
+            if (LightmapConfig.RenderAdvancedLighting)
+            {
+                foreach (Light light in lightEntities)
+                {
+                    if (light.Radius > 0 && light.LightSeparation < 1)
+                    {
+                        throw new SoftLightQualityException(
+                            $"A soft light located at ({light.Origin.X}, {light.Origin.Y}, {light.Origin.Z}) has a quality of 0 or less. Please resolve the issue before rendering again."
+                        );
+                    }
+                }
+                lightEntities = Light.CalculateSoftLights(lightEntities);
+            }
 
             List<LMFace> allBlockers = lmGroups.Select(q => q.Faces).SelectMany(q => q).Where(f => f.CastsShadows).Union(exclusiveBlockers).ToList();
             int faceCount = 0;
@@ -843,5 +856,10 @@ namespace CBRE.Editor.Compiling.Lightmap
                 }
             }
         }
+    }
+
+    public class SoftLightQualityException : Exception
+    {
+        public SoftLightQualityException(string message) : base(message) { }
     }
 }
