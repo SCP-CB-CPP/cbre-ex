@@ -92,7 +92,7 @@ namespace CBRE.Editor.Compiling
             //header
             if (is1_3_12) {
                 br.WriteB3DString("RM");
-                br.Write((byte)0); // version
+                br.Write((byte)1); // version
             } else {
                 br.WriteB3DString(triggerBoxes.Any() ? "RoomMesh.HasTriggerBox" : "RoomMesh");
             }

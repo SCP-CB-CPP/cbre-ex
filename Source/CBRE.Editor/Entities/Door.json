@@ -11,6 +11,13 @@
       "HelpText": "The type of the door. 0 for regular doors, 1 for big containment doors found in most containment chambers, 2 for Heavy Containment Zone doors, 3 for elevator doors."
     },
     {
+      "Name": "index",
+      "Type": "Integer",
+      "SmartEditName": "Index",
+      "DefaultValue": "-1",
+      "HelpText": "The index this door is placed at in the room's RoomDoors array. Has no effect besides making this door accessible to scripts. Negative values do not assign the door to any index. The maximum is 8."
+    },
+    {
       "Name": "keycard",
       "Type": "Integer",
       "SmartEditName": "Key Card Level",
@@ -18,11 +25,11 @@
       "HelpText": "The level of keycard required to open this door or 0 for no key card. -1 corresponds to the white severed hand, -2 to the black severed hand. Mutually exclusive with Keypad Code."
     },
     {
-        "Name": "code",
-        "Type": "String",
-        "SmartEditName": "Keypad Code",
-        "DefaultValue": "",
-        "HelpText": "A numeric four digit code (longer or non-numeric codes render the door unopenable) or an empty string for no code. Mutually exclusive with Key Card Level."
+      "Name": "code",
+      "Type": "String",
+      "SmartEditName": "Keypad Code",
+      "DefaultValue": "",
+      "HelpText": "A numeric four digit code (longer or non-numeric codes render the door unopenable) or an empty string for no code. Mutually exclusive with Key Card Level."
     },
     {
       "Name": "angle",
