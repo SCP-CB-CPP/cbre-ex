@@ -11,9 +11,9 @@
       "HelpText": "The type of the door. 0 for regular doors, 1 for big containment doors found in most containment chambers, 2 for Heavy Containment Zone doors, 3 for elevator doors."
     },
     {
-      "Name": "index",
+      "Name": "id",
       "Type": "Integer",
-      "SmartEditName": "Index",
+      "SmartEditName": "Identifier",
       "DefaultValue": "-1",
       "HelpText": "The index this door is placed at in the room's RoomDoors array. Has no effect besides making this door accessible to scripts. Negative values do not assign the door to any index. The maximum is 8."
     },
