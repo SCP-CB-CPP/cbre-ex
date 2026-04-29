@@ -450,10 +450,7 @@ namespace CBRE.Editor.Compiling
         {
             Property mapProperty = entity.EntityData.Properties.FirstOrDefault(x => x.Key == property.Name);
 
-            if (mapProperty == default(Property))
-                throw new Exception($"A property with the key \"{property.Name}\" was not found in the EntityData for the custom entity of type \"{entity.ClassName}\" at " +
-                                    $"position ({entity.Origin.X}, {entity.Origin.Y}, {entity.Origin.Z}). " +
-                                    $"Make sure the custom entity's properties match it's JSON file definition.");
+            mapProperty ??= new() { Key = property.Name, Value = property.DefaultValue };
             
             switch (property.VariableType)
             {
