@@ -47,7 +47,7 @@ namespace CBRE.DataStructures.MapObjects
 
         public Coordinate GetCoordinate(Coordinate defaultIfInvalid)
         {
-            string[] spl = Value.Split(' ');
+            string[] spl = Value.Trim().Split(' ');
             if (spl.Length != 3) return defaultIfInvalid;
             decimal x, y, z;
             if (decimal.TryParse(spl[0], NumberStyles.Float, CultureInfo.InvariantCulture, out x)
