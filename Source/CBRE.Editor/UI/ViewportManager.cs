@@ -135,6 +135,12 @@ namespace CBRE.Editor.UI
                 ViewportBase vp = CreateViewport(viewport, def.Item1, def.Item2, def.Item3);
                 Viewports.Add(vp);
                 SubscribeExceptions(vp);
+
+                Rectangle rec = config.Configuration.Rectangles[i];
+                tableSplitControl.Controls.Add(vp, rec.X, rec.Y);
+                tableSplitControl.SetColumnSpan(vp, rec.Width);
+                tableSplitControl.SetRowSpan(vp, rec.Height);
+
                 tableSplitControl.Controls.Add(vp);
                 Mediator.Publish(EditorMediator.ViewportCreated, vp);
                 vp.Run();
@@ -220,7 +226,7 @@ namespace CBRE.Editor.UI
 
         private static IEnumerable<ViewportBase> GetViewportsForTableSplitControl(TableSplitControl control)
         {
-            return Viewports.Where(x => GetParentSplitControl(x) == control);
+            return Viewports.Where(x => GetParentSplitControl(x) == control).OrderBy(x => control.GetRow(x)).ThenBy(x => control.GetColumn(x));
         }
 
         public static PointF GetSplitterPosition()
