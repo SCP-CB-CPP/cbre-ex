@@ -141,7 +141,8 @@ namespace CBRE.DataStructures.GameData
             Classes.Add(modelDataObj);
 
             GameDataObject screenDataObj = new GameDataObject("screen", "Savescreen.", ClassType.Point);
-            screenDataObj.Properties.Add(new Property("imgpath", VariableType.String) { ShortDescription = "Image Path", DefaultValue = "" });
+            screenDataObj.Properties.Add(new Property("imgpath", VariableType.String) { ShortDescription = "Image Path", DefaultValue = "",
+                Description = "The entered path is automatically prefixed with 'GFX/screens/' by the game." });
             screenDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/screen"));
             Classes.Add(screenDataObj);
 
