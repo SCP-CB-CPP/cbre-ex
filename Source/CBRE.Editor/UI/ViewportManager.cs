@@ -220,7 +220,7 @@ namespace CBRE.Editor.UI
 
         private static IEnumerable<ViewportBase> GetViewportsForTableSplitControl(TableSplitControl control)
         {
-            return Viewports.Where(x => GetParentSplitControl(x) == control);
+            return Viewports.Where(x => GetParentSplitControl(x) == control).OrderBy(control.GetRow).ThenBy(control.GetColumn);
         }
 
         public static PointF GetSplitterPosition()
