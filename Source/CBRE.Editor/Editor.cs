@@ -193,6 +193,7 @@ namespace CBRE.Editor
 
 			ToggleDiscord(CBRE.Settings.General.EnableDiscordPresence);
 
+			/*
 			try
 			{
 				SteamClient.Init(4257960);
@@ -201,6 +202,7 @@ namespace CBRE.Editor
 			{
 				Logging.Logger.ShowException(ex, "Failed to initialize Steam client: " + ex.Message);
 			}
+			*/
 
 		}
 
