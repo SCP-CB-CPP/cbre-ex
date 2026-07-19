@@ -9,7 +9,8 @@
     <AssemblyName>CBRE.Editor</AssemblyName>
     
     <TargetFramework>net48</TargetFramework>
-    <Platforms>AnyCPU</Platforms>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LargeAddressAware>true</LargeAddressAware>
     <LangVersion>latest</LangVersion>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <IsWebBootstrapper>false</IsWebBootstrapper>
@@ -588,7 +589,4 @@
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="WindowsAPICodePack" Version="8.0.6" />
   </ItemGroup>
-  <PropertyGroup>
-    <LargeAddressAware>true</LargeAddressAware>
-  </PropertyGroup>
 </Project>
