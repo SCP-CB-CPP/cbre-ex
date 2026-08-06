@@ -196,12 +196,18 @@ namespace CBRE.Editor
 			try
 			{
 				SteamClient.Init(4257960);
+				Application.Idle += Update;
 			}
 			catch (Exception ex)
 			{
 				Logging.Logger.ShowException(ex, "Failed to initialize Steam client: " + ex.Message);
 			}
 
+		}
+
+		private void Update(object sender, EventArgs args)
+		{
+			SteamClient.RunCallbacks();
 		}
 
 		public void ToggleDiscord(bool Enabled)
@@ -252,7 +258,11 @@ namespace CBRE.Editor
 			ViewportManager.SaveLayout();
 			SettingsManager.SaveSession(DocumentManager.Documents.Select(x => Tuple.Create(x.MapFile, x.Game)));
 			SettingsManager.Write();
-			SteamClient.Shutdown();
+            if (SteamClient.IsValid)
+            {
+                Application.Idle -= Update;
+                SteamClient.Shutdown();
+            }
 		}
 
 		protected override void OnDragDrop(DragEventArgs drgevent)
