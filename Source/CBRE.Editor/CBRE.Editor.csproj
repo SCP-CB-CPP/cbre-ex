@@ -581,8 +581,8 @@
     <ProjectReference Include="..\CBRE.UI\CBRE.UI.csproj" />
   </ItemGroup>
   <ItemGroup>
-	<PackageReference Include="Facepunch.Steamworks.Dll" Version="1.48.0" />
-    <PackageReference Include="Facepunch.Steamworks.win32" Version="2.3.3" />
+	<PackageReference Include="Facepunch.Steamworks" Version="2.3.3" />
+	<PackageReference Include="Facepunch.Steamworks.Library" Version="2.3.3" />
     <PackageReference Include="DiscordRichPresence" Version="1.1.4.20" />
     <PackageReference Include="LargeAddressAware" Version="1.0.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
