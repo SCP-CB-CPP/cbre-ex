@@ -10,7 +10,7 @@
     <Content Include="Resources\CBRE.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AssimpNet" Version="4.1.0" />
+    <PackageReference Include="AssimpNetter" Version="6.0.5" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CBRE.Packages\CBRE.Packages.csproj" />

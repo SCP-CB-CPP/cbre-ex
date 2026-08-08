@@ -1,9 +1,10 @@
-﻿using Assimp;
-using CBRE.Packages;
+﻿using CBRE.Packages;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
+using Assimp;
 
 namespace CBRE.SMFConverter
 {
@@ -78,17 +79,17 @@ namespace CBRE.SMFConverter
                 Node node = new Node($"{parentNode.Name}_child{i}");
                 Mesh mesh = new Mesh($"mesh{i}", PrimitiveType.Triangle);
 
-                Vector3D position = reader.ReadVector3D();
+                Vector3 position = reader.ReadVector3D();
 
-                Vector3D rotation = reader.ReadVector3D();
+                Vector3 rotation = reader.ReadVector3D();
 
-                Vector3D scale = reader.ReadVector3D();
+                Vector3 scale = reader.ReadVector3D();
 
                 string textureGroup = reader.ReadNullTerminatedString();
 
                 string textureName = Path.GetFileNameWithoutExtension(reader.ReadNullTerminatedString());
 
-                Matrix4x4 transform = Matrix4x4.FromScaling(scale) * Matrix4x4.FromEulerAnglesXYZ(rotation) * Matrix4x4.FromTranslation(position);
+                Matrix4x4 transform = Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromYawPitchRoll(rotation.Y, rotation.X, rotation.Z) * Matrix4x4.CreateTranslation(position);
 
                 node.Transform = transform;
 
@@ -105,7 +106,7 @@ namespace CBRE.SMFConverter
                     Assimp.TextureWrapMode.Wrap,
                     Assimp.TextureWrapMode.Wrap,
                     0);
-                material.AddMaterialTexture(ref textureSlot);
+                material.AddMaterialTexture(textureSlot);
                 scene.Materials.Add(material);
 
                 mesh.MaterialIndex = scene.MaterialCount - 1;
@@ -114,18 +115,18 @@ namespace CBRE.SMFConverter
                 Log($"{vertexCount} vertices");
                 for (int j = 0; j < vertexCount; j++)
                 {
-                    Vector3D vertexPosition = reader.ReadVector3D();
+                    Vector3 vertexPosition = reader.ReadVector3D();
                     mesh.Vertices.Add(vertexPosition);
                 }
                 for (int j = 0; j < vertexCount; j++)
                 {
-                    Vector3D vertexNormal = reader.ReadVector3D();
+                    Vector3 vertexNormal = reader.ReadVector3D();
                     mesh.Normals.Add(vertexNormal);
                 }
                 for (int j = 0; j < vertexCount; j++)
                 {
-                    Vector2D vertexTexCoords = reader.ReadVector2D();
-                    mesh.TextureCoordinateChannels[0].Add(new Vector3D(vertexTexCoords, 0.0f));
+                    Vector2 vertexTexCoords = reader.ReadVector2D();
+                    mesh.TextureCoordinateChannels[0].Add(new Vector3(vertexTexCoords, 0.0f));
                 }
                 mesh.UVComponentCount[0] = 2;
 

@@ -26,6 +26,6 @@
     <Content Include="Map\RMF22.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AssimpNetter" Version="6.0.4" />
+    <PackageReference Include="AssimpNetter" Version="6.0.5" />
   </ItemGroup>
 </Project>

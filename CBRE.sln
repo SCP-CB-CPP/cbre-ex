@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.6.11716.218 insiders
+VisualStudioVersion = 18.6.11716.218
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBRE.UI", "Source\CBRE.UI\CBRE.UI.csproj", "{ABBEE97F-B5A6-4ED6-8D8F-6D4091FB9D44}"
 EndProject
