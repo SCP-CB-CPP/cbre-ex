@@ -9,7 +9,7 @@
     <AssemblyName>CBRE.Editor</AssemblyName>
     
     <TargetFramework>net48</TargetFramework>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <LargeAddressAware>true</LargeAddressAware>
     <LangVersion>latest</LangVersion>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
