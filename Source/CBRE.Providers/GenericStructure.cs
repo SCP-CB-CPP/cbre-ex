@@ -554,11 +554,11 @@ namespace CBRE.Providers
             {
                 tw.Write(postTabStr);
                 tw.Write('"');
-                tw.Write(LengthLimit(kv.Key, 1024));
+                tw.Write(LengthLimit(kv.Key, 32768));
                 tw.Write('"');
                 tw.Write(' ');
                 tw.Write('"');
-                tw.Write(LengthLimit((kv.Value ?? "").Replace('"', '`'), 1024));
+                tw.Write(LengthLimit((kv.Value ?? "").Replace('"', '`'), 32768));
                 tw.Write('"');
                 tw.WriteLine();
             }
