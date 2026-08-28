@@ -205,7 +205,7 @@ namespace CBRE.Editor.Rendering.Renderers
 
                         Coordinate scale = tuple.Item1.EntityData.GetPropertyCoordinate("scale", Coordinate.One);
                         scale = new Coordinate(scale.X, scale.Z, scale.Y);
-                        Coordinate angles = tuple.Item1.EntityData.GetPropertyCoordinate("angles", Coordinate.Zero);
+                        Coordinate angles = tuple.Item1.GetAngles();
                         if (tuple.Item1.IsSelected)
                         {
                             origin *= _selectionTransformMat;

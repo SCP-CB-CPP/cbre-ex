@@ -510,5 +510,9 @@ namespace CBRE.DataStructures.MapObjects
                 mo.ForEach(matcher, action, forceMatchIfParentMatches);
             }
         }
+
+        public Coordinate GetAngles() => GetEntityData().GetPropertyValue("angle") is { } angle
+            ? new(0, decimal.Parse(angle), 0)
+            : GetEntityData().GetPropertyCoordinate("angles", Coordinate.Zero);
     }
 }

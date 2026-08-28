@@ -126,6 +126,11 @@ namespace CBRE.Editor.Extensions
                 return System.IO.Path.GetFileNameWithoutExtension(entity.EntityData.GetPropertyValue("file"));
             }
 
+            if (entity.ClassName == "door")
+            {
+                return entity.EntityData.GetPropertyValue("type") == "1" ? "ContDoorCombined" : "doorframe";
+            }
+
             return null;
         }
 

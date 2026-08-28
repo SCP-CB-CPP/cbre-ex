@@ -1,7 +1,6 @@
 {
   "Name": "door",
   "Description": "Spawn a door.",
-  "Sprite": "sprites/door",
   "Properties": [
     {
       "Name": "type",

@@ -96,7 +96,7 @@ namespace CBRE.DataStructures.MapObjects
             {
                 Coordinate scale = EntityData.GetPropertyCoordinate("scale", Coordinate.One);
                 scale = new Coordinate(scale.X, scale.Z, scale.Y);
-                Coordinate angles = EntityData.GetPropertyCoordinate("angles", Coordinate.Zero);
+                Coordinate angles = GetAngles();
                 Matrix pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
                 Matrix yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
                 Matrix roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
@@ -182,12 +182,19 @@ namespace CBRE.DataStructures.MapObjects
         public override void Transform(IUnitTransformation transform, TransformFlags flags)
         {
             Origin = transform.Transform(Origin);
-            Coordinate angles = EntityData.GetPropertyCoordinate("angles");
+            Coordinate angles = GetAngles();
             if (angles != null && transform is UnitMatrixMult uTransform)
             {
                 Coordinate finalAngles = TransformToEuler(uTransform, angles);
 
-                EntityData.SetPropertyValue("angles", finalAngles.ToDataString());
+                if (EntityData.Properties.Any(x => x.Key == "angle"))
+                {
+                    EntityData.SetPropertyValue("angle", finalAngles.Y.ToString("F7").TrimEnd('0').TrimEnd('.'));
+                }
+                else
+                {
+                    EntityData.SetPropertyValue("angles", finalAngles.ToDataString());
+                }
             }
             base.Transform(transform, flags);
         }

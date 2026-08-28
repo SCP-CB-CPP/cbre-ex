@@ -44,7 +44,7 @@ namespace CBRE.Editor.Rendering.Helpers
             EntityData entityData = o.GetEntityData();
             if (entityData == null) return;
 
-            Coordinate angles = entityData.GetPropertyCoordinate("angles");
+            Coordinate angles = o.GetAngles();
             if (angles == null) return;
 
             //angles = new Coordinate(DMath.DegreesToRadians(angles.Z), DMath.DegreesToRadians(angles.X), DMath.DegreesToRadians(angles.Y));

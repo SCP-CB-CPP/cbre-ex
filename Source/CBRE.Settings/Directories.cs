@@ -38,7 +38,7 @@ namespace CBRE.Settings
 
         public static string GetModelPath(string filename)
         {
-            foreach (string dir in ModelDirs)
+            foreach (string dir in ModelDirs.Append("Models/"))
             {
                 string dirSlash = dir;
                 if (dir.Last() != '/' && dir.Last() != '\\')
