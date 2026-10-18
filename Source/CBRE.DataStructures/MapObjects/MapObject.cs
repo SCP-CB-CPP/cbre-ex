@@ -512,7 +512,7 @@ namespace CBRE.DataStructures.MapObjects
         }
 
         public Coordinate GetAngles() => GetEntityData().GetPropertyValue("angle") is { } angle
-            ? new(0, decimal.Parse(angle), 0)
+            ? new(0, angle == "" ? 0 : decimal.Parse(angle), 0)
             : GetEntityData().GetPropertyCoordinate("angles", Coordinate.Zero);
     }
 }

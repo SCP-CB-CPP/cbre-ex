@@ -189,7 +189,7 @@ namespace CBRE.DataStructures.MapObjects
 
                 if (EntityData.Properties.Any(x => x.Key == "angle"))
                 {
-                    EntityData.SetPropertyValue("angle", finalAngles.Y.ToString("F7").TrimEnd('0').TrimEnd('.'));
+                    EntityData.SetPropertyValue("angle", Coordinate.DecimalToData(finalAngles.Y));
                 }
                 else
                 {
