@@ -10,7 +10,7 @@
       "HelpText": "The type of the door. 0 for regular doors, 1 for big containment doors found in most containment chambers, 2 for Heavy Containment Zone doors, 3 for elevator doors."
     },
     {
-      "Name": "id",
+      "Name": "identifier",
       "Type": "Integer",
       "SmartEditName": "Identifier",
       "DefaultValue": "-1",

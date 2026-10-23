@@ -70,6 +70,12 @@ namespace CBRE.DataStructures.GameData
 
                         continue;
                     }
+                    if (customProperty.Name == "id")
+                    {
+                        CustomEntityErrors.Add($"[{jsonFilename}] Property has reserved name \"id\". Skipping property.");
+
+                        continue;
+                    }
                     if (!Enum.TryParse(customProperty.Type, out VariableType varType))
                     {
                         CustomEntityErrors.Add($"[{jsonFilename}] Could not read type of property \"{customProperty.Name}\". Skipping property.");
