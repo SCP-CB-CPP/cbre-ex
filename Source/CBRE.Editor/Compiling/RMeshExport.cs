@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using CBRE.Common.Extensions;
+using Path = System.IO.Path;
 
 namespace CBRE.Editor.Compiling
 {
@@ -39,6 +40,8 @@ namespace CBRE.Editor.Compiling
             LM = 2
         };
 
+        private const byte EXPORTED_VERSION = 2;
+        
         public static void SaveToFile(string filename, Document document, ExportForm form, bool is1_3_12)
         {
             Map map = document.Map;
@@ -92,7 +95,7 @@ namespace CBRE.Editor.Compiling
             //header
             if (is1_3_12) {
                 br.WriteB3DString("RM");
-                br.Write((byte)1); // version
+                br.Write(EXPORTED_VERSION);
             } else {
                 br.WriteB3DString(triggerBoxes.Any() ? "RoomMesh.HasTriggerBox" : "RoomMesh");
             }
@@ -333,6 +336,10 @@ namespace CBRE.Editor.Compiling
             {
                 br.WriteB3DString("light");
 
+                if (is1_3_12 && EXPORTED_VERSION >= 2) {
+                    br.Write(light.HasSprite);
+                }
+                
                 br.Write(light.Origin.X);
                 br.Write(light.Origin.Z);
                 br.Write(light.Origin.Y);
@@ -395,6 +402,12 @@ namespace CBRE.Editor.Compiling
                 br.Write((float)scale.X);
                 br.Write((float)scale.Y);
                 br.Write((float)scale.Z);
+
+                if (is1_3_12 && EXPORTED_VERSION >= 2) {
+                    br.Write(prop.EntityData.GetPropertyValue("hascollision")?.ToBool() ?? true);
+                    br.Write(int.Parse(prop.EntityData.GetPropertyValue("effects") ?? "0"));
+                    br.WriteB3DString(Path.GetFileName(prop.EntityData.GetPropertyValue("textureoverride") ?? ""));
+                }
             }
 
             foreach (Entity screen in screens)
