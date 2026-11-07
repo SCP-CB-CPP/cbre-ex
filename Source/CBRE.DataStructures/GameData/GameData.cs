@@ -142,6 +142,7 @@ namespace CBRE.DataStructures.GameData
             modelDataObj.Properties.Add(new Property("file", VariableType.String) { ShortDescription = "File", DefaultValue = "" });
             modelDataObj.Properties.Add(new Property("angles", VariableType.Vector) { ShortDescription = "Rotation", DefaultValue = "0 0 0" });
             modelDataObj.Properties.Add(new Property("scale", VariableType.Vector) { ShortDescription = "Scale", DefaultValue = "1 1 1" });
+            modelDataObj.Properties.Add(new Property("castshadow", VariableType.Bool) { ShortDescription = "Cast Shadow", DefaultValue = "Yes" });
             modelDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/model"));
             modelDataObj.Behaviours.Add(new Behaviour("useModels"));
             Classes.Add(modelDataObj);

@@ -15,6 +15,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using CBRE.Common.Extensions;
 using CBRE.DataStructures.Models;
 using CBRE.Editor.Extensions;
 using CBRE.Extensions;
@@ -201,7 +202,8 @@ namespace CBRE.Editor.Compiling.Lightmap
 
                 Dictionary<string, ModelReference> modelReferences = document.GetMemory<Dictionary<string, ModelReference>>("ModelCache");
 
-                foreach (Entity model in modelEntities)
+                foreach (Entity model in modelEntities
+                             .Where(x => x.EntityData.GetPropertyValue("castshadow")?.ToBool() ?? false))
                 {
                     Coordinate euler = model.EntityData.GetPropertyCoordinate("angles", Coordinate.Zero);
                     Coordinate scale = model.EntityData.GetPropertyCoordinate("scale", Coordinate.One);
