@@ -112,7 +112,7 @@ namespace CBRE.DataStructures.GameData
             GameDataObject lightDataObj = new GameDataObject("light", "Point light source.", ClassType.Point);
             lightDataObj.Properties.Add(new Property("color", VariableType.Color255) { ShortDescription = "Color", DefaultValue = "255 255 255" });
             lightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
-            lightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
+            lightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1000.0" });
             lightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
             lightDataObj.Properties.Add(new Property("alwaysexport", VariableType.Bool) { ShortDescription = "Always export", Description = "By default, lights for which Has sprite is disabled are not exported. This option overrides that behavior, which may be desired for vertex lighting.", DefaultValue = "No" });
             lightDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/lightbulb"));
@@ -121,7 +121,7 @@ namespace CBRE.DataStructures.GameData
             GameDataObject spotlightDataObj = new GameDataObject("spotlight", "Self-explanatory.", ClassType.Point);
             spotlightDataObj.Properties.Add(new Property("color", VariableType.Color255) { ShortDescription = "Color", DefaultValue = "255 255 255" });
             spotlightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
-            spotlightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
+            spotlightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1000.0" });
             spotlightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
             spotlightDataObj.Properties.Add(new Property("alwaysexport", VariableType.Bool) { ShortDescription = "Always export", Description = "By default, lights for which Has sprite is disabled are not exported. This option overrides that behavior, which may be desired for vertex lighting.", DefaultValue = "No" });
             spotlightDataObj.Properties.Add(new Property("innerconeangle", VariableType.Float) { ShortDescription = "Inner cone angle", DefaultValue = "45" });
