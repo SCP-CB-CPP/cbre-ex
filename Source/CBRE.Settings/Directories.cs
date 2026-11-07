@@ -38,6 +38,11 @@ namespace CBRE.Settings
 
         public static string GetModelPath(string filename)
         {
+            if (filename == null) return null;
+            
+            var originalExt = Path.GetExtension(filename);
+            if (originalExt.Length > 0) originalExt = originalExt.Substring(1);
+            filename = Path.ChangeExtension(filename, null);
             foreach (string dir in ModelDirs.Append("Models/"))
             {
                 string dirSlash = dir;
@@ -45,7 +50,7 @@ namespace CBRE.Settings
                 {
                     dirSlash += "/";
                 }
-                foreach (string ext in ModelExtensions)
+                foreach (string ext in ModelExtensions.Append(originalExt))
                 {
                     string fullFilename = dirSlash + filename + "." + ext;
                     if (File.Exists(fullFilename)) { return fullFilename; }
