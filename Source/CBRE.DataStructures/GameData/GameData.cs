@@ -114,6 +114,7 @@ namespace CBRE.DataStructures.GameData
             lightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
             lightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
             lightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
+            lightDataObj.Properties.Add(new Property("alwaysexport", VariableType.Bool) { ShortDescription = "Always export", Description = "By default, lights for which Has sprite is disabled are not exported. This option overrides that behavior, which may be desired for vertex lighting.", DefaultValue = "No" });
             lightDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/lightbulb"));
             Classes.Add(lightDataObj);
 
@@ -122,6 +123,7 @@ namespace CBRE.DataStructures.GameData
             spotlightDataObj.Properties.Add(new Property("intensity", VariableType.Float) { ShortDescription = "Intensity", DefaultValue = "1.0" });
             spotlightDataObj.Properties.Add(new Property("range", VariableType.Float) { ShortDescription = "Range", DefaultValue = "1.0" });
             spotlightDataObj.Properties.Add(new Property("hassprite", VariableType.Bool) { ShortDescription = "Has sprite", DefaultValue = "Yes" });
+            spotlightDataObj.Properties.Add(new Property("alwaysexport", VariableType.Bool) { ShortDescription = "Always export", Description = "By default, lights for which Has sprite is disabled are not exported. This option overrides that behavior, which may be desired for vertex lighting.", DefaultValue = "No" });
             spotlightDataObj.Properties.Add(new Property("innerconeangle", VariableType.Float) { ShortDescription = "Inner cone angle", DefaultValue = "45" });
             spotlightDataObj.Properties.Add(new Property("outerconeangle", VariableType.Float) { ShortDescription = "Outer cone angle", DefaultValue = "90" });
             spotlightDataObj.Properties.Add(new Property("angles", VariableType.Vector) { ShortDescription = "Rotation", DefaultValue = "0 0 0" });

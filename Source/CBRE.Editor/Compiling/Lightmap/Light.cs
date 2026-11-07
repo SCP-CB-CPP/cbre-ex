@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using CBRE.Common.Extensions;
 
 namespace CBRE.Editor.Compiling.Lightmap
 {
@@ -14,6 +15,7 @@ namespace CBRE.Editor.Compiling.Lightmap
         public CoordinateF Color;
         public float Intensity;
         public bool HasSprite;
+        public bool AlwaysExport;
         public CoordinateF Origin;
         public float Range;
 
@@ -23,11 +25,6 @@ namespace CBRE.Editor.Compiling.Lightmap
 
         public static void FindLights(Map map, out List<Light> lightEntities)
         {
-            Predicate<string> parseBooleanProperty = (prop) =>
-            {
-                return prop.Equals("yes", StringComparison.OrdinalIgnoreCase) || prop.Equals("true", StringComparison.OrdinalIgnoreCase);
-            };
-
             lightEntities = new List<Light>();
             lightEntities.AddRange(map.WorldSpawn.Find(q => q.ClassName == "light").OfType<Entity>()
                 .Select(x =>
@@ -42,7 +39,8 @@ namespace CBRE.Editor.Compiling.Lightmap
                     {
                         intensity = 1.0f;
                     }
-                    bool hasSprite = parseBooleanProperty(x.EntityData.GetPropertyValue("hassprite") ?? "true");
+                    bool hasSprite = x.EntityData.GetPropertyValue("hassprite")?.ToBool() ?? true;
+                    bool alwaysExport = x.EntityData.GetPropertyValue("alwaysexport")?.ToBool() ?? false;
 
                     // TODO: RGB\A color
                     Color c = x.EntityData.GetPropertyColor("color", System.Drawing.Color.Black);
@@ -54,6 +52,7 @@ namespace CBRE.Editor.Compiling.Lightmap
                         Color = new CoordinateF(c.R, c.G, c.B),
                         Intensity = intensity,
                         HasSprite = hasSprite,
+                        AlwaysExport = alwaysExport,
                         Direction = null,
                         innerCos = null,
                         outerCos = null
@@ -72,7 +71,8 @@ namespace CBRE.Editor.Compiling.Lightmap
                     {
                         intensity = 1.0f;
                     }
-                    bool hasSprite = parseBooleanProperty(x.EntityData.GetPropertyValue("hassprite") ?? "true");
+                    bool hasSprite = x.EntityData.GetPropertyValue("hassprite")?.ToBool() ?? true;
+                    bool alwaysExport = x.EntityData.GetPropertyValue("alwaysexport")?.ToBool() ?? false;
                     float innerCos = 0.5f;
                     if (float.TryParse(x.EntityData.GetPropertyValue("innerconeangle"), out innerCos))
                     {
@@ -93,6 +93,7 @@ namespace CBRE.Editor.Compiling.Lightmap
                         Color = new CoordinateF(c.R, c.G, c.B),
                         Intensity = intensity,
                         HasSprite = hasSprite,
+                        AlwaysExport = alwaysExport,
                         Direction = null,
                         innerCos = innerCos,
                         outerCos = outerCos

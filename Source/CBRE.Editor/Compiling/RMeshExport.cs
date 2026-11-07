@@ -51,7 +51,7 @@ namespace CBRE.Editor.Compiling
             List<Light> lights;
             Lightmapper.Render(document, form, out faces, out lmCount);
             Light.FindLights(map, out lights);
-            lights.RemoveAll(l => !l.HasSprite);
+            lights.RemoveAll(l => !l.HasSprite && !l.AlwaysExport);
 
             IEnumerable<Face> transparentFaces = map.WorldSpawn.Find(x => x is Solid).OfType<Solid>().SelectMany(x => x.Faces).Where(x =>
             {
