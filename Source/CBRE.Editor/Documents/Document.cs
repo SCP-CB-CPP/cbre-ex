@@ -113,7 +113,63 @@ namespace CBRE.Editor.Documents
             
             IEnumerable<Entity> allEntities = map.WorldSpawn.Find(x => x.ClassName != null).OfType<Entity>();
 
-            if (allEntities.Any(x => x.GameData == null))
+            var realUnknownEntitiesFound = false;
+            foreach (var entity in allEntities.Where(x => x.GameData == null)) {
+                if (entity.ClassName == "mesh") {
+                    entity.EntityData.Name = "model";
+                    foreach (var prop in entity.EntityData.Properties) {
+                        prop.Key = prop.Key switch {
+                            "hasCollision" => "hascollision",
+                            "meshFX" => "effects",
+                            "textureOverwrite" => "textureoverride",
+                            _ => prop.Key,
+                        };
+                    }
+                    
+                    SetCastShadowLegacy(entity);
+
+                    entity.GameData = GameData.Classes.First(x => x.Name == "model");
+                    AddMissingProperties(entity);
+                } else if (entity.ClassName == "light_fix") {
+                    entity.EntityData.Name = "light";
+                    entity.EntityData.Properties.Add(new() { Key = "alwaysexport", Value = "Yes" });
+                    entity.GameData = GameData.Classes.First(x => x.Name == "light");
+                    AddMissingProperties(entity);
+                } else if (entity.ClassName == "save_screen") {
+                    var screen = new Entity(map.IDGenerator.GetNextObjectID());
+                    screen.Origin = entity.Origin;
+                    screen.EntityData.Name = "screen";
+                    screen.GameData = GameData.Classes.First(x => x.Name == "screen");
+                    screen.EntityData.SetPropertyValue("imgpath", entity.EntityData.GetPropertyValue("imgpath"));
+                    screen.SetParent(entity.Parent);
+                    
+                    entity.EntityData.Name = "model";
+                    entity.EntityData.Properties.RemoveAll(x => x.Key == "imgpath");
+                    SetCastShadowLegacy(entity);
+                    entity.GameData = GameData.Classes.First(x => x.Name == "model");
+                    AddMissingProperties(entity);
+                } else {
+                    realUnknownEntitiesFound = true;
+                }
+            }
+
+            void SetCastShadowLegacy(Entity model) {
+                // This is a bit hacky. It basically captures a hack used in older CBRE versions for UER where
+                // appending an extension to the model filename would cause it to not cast shadows when rendering
+                // lightmaps.
+                model.EntityData.SetPropertyValue("castshadow",
+                    Path.GetExtension(model.EntityData.GetPropertyValue("file")) == "" ? "Yes" : "No");
+            }
+
+            void AddMissingProperties(Entity entity) {
+                foreach (var prop in entity.GameData.Properties) {
+                    if (entity.EntityData.Properties.All(x => x.Key != prop.Name)) {
+                        entity.EntityData.Properties.Add(new() { Key = prop.Name, Value = prop.DefaultValue });
+                    }
+                }
+            }
+            
+            if (realUnknownEntitiesFound)
             {
                 MessageBox.Show("CBRE-EX has found some unknown entities in this map file.\n" +
                                 "They will not be exported, and they will appear as a small colored cube in the 3D viewport.\n" +
