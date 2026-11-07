@@ -144,7 +144,10 @@ namespace CBRE.DataStructures.GameData
             modelDataObj.Properties.Add(new Property("file", VariableType.String) { ShortDescription = "File", DefaultValue = "" });
             modelDataObj.Properties.Add(new Property("angles", VariableType.Vector) { ShortDescription = "Rotation", DefaultValue = "0 0 0" });
             modelDataObj.Properties.Add(new Property("scale", VariableType.Vector) { ShortDescription = "Scale", DefaultValue = "1 1 1" });
+            modelDataObj.Properties.Add(new Property("hascollision", VariableType.Bool) { ShortDescription = "Has Collision", DefaultValue = "Yes" });
             modelDataObj.Properties.Add(new Property("castshadow", VariableType.Bool) { ShortDescription = "Cast Shadow", DefaultValue = "Yes" });
+            modelDataObj.Properties.Add(new Property("effects", VariableType.Integer) { ShortDescription = "Effects", Description = "See Blitz3D's EntityFX for reference", DefaultValue = "0" });
+            modelDataObj.Properties.Add(new Property("textureoverride", VariableType.String) { ShortDescription = "Texture Override", Description = "Texture name to override the models's texture with. Paths are not supported. Extension must be suffixed. The texture can either be next to the .rmesh file or within GFX/map/ or GFX/map/Props.", DefaultValue = "" });
             modelDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/model"));
             modelDataObj.Behaviours.Add(new Behaviour("useModels"));
             Classes.Add(modelDataObj);
