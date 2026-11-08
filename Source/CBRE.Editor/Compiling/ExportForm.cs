@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -115,6 +116,7 @@ namespace CBRE.Editor.Compiling
                 filter += "|Stereolithography (*.stl)|*.stl";
                 filter += "|Stanford Polygon Library (*.ply)|*.ply";
                 save.Filter = filter;
+                save.FileName = Path.ChangeExtension(Document.MapFileName, null);
                 if (save.ShowDialog() == DialogResult.OK)
                 {
                     SaveFileName = save.FileName;
