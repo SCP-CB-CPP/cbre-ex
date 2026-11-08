@@ -207,7 +207,8 @@ namespace CBRE.Editor.Tools
         {
             if (e.KeyChar == 13) // Enter
             {
-                if (!_clipPlanePoint1.EquivalentTo(_clipPlanePoint2)
+                if (_clipPlanePoint1 != null && _clipPlanePoint2 != null && _clipPlanePoint3 != null
+                    && !_clipPlanePoint1.EquivalentTo(_clipPlanePoint2)
                     && !_clipPlanePoint2.EquivalentTo(_clipPlanePoint3)
                     && !_clipPlanePoint1.EquivalentTo(_clipPlanePoint3)) // Don't clip if the points are too close together
                 {

@@ -167,6 +167,15 @@ namespace CBRE.DataStructures.MapObjects
 
             back = CreateFromIntersectingPlanes(backPlanes, generator);
             front = CreateFromIntersectingPlanes(frontPlanes, generator);
+
+            var extendedBox = new Box(
+                (BoundingBox.Start - BoundingBox.Center) * 1.1m + BoundingBox.Center,
+                (BoundingBox.End - BoundingBox.Center) * 1.1m + BoundingBox.Center);
+            if (back.Faces.Concat(front.Faces).SelectMany(x => x.Vertices)
+                .Any(x => !extendedBox.CoordinateIsInside(x.Location))) {
+                return false;
+            }
+            
             CopyBase(back, generator);
             CopyBase(front, generator);
 
