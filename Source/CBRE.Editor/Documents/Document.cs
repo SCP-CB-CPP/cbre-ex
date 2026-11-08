@@ -131,10 +131,21 @@ namespace CBRE.Editor.Documents
                     entity.GameData = GameData.Classes.First(x => x.Name == "model");
                     AddMissingProperties(entity);
                 } else if (entity.ClassName == "light_fix") {
-                    entity.EntityData.Name = "light";
-                    entity.EntityData.Properties.Add(new() { Key = "alwaysexport", Value = "Yes" });
-                    entity.GameData = GameData.Classes.First(x => x.Name == "light");
-                    AddMissingProperties(entity);
+                    Entity closestLight = null;
+                    var closestDistanceSqr = decimal.MaxValue;
+                    foreach (var light in allEntities.Where(x => x.ClassName is "light" or "spotlight")) {
+                        var dist = (entity.Origin - light.Origin).LengthSquared();
+                        if (dist < closestDistanceSqr) {
+                            closestDistanceSqr = dist;
+                            closestLight = light;
+                        }
+                    }
+
+                    if (closestLight != null && closestDistanceSqr < 16m * 16m) {
+                        closestLight.EntityData.SetPropertyValue("alwaysexport", "Yes");
+                    }
+
+                    entity.SetParent(null);
                 } else if (entity.ClassName == "save_screen") {
                     var screen = new Entity(map.IDGenerator.GetNextObjectID());
                     screen.Origin = entity.Origin;
