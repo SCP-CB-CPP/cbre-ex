@@ -56,18 +56,24 @@ namespace CBRE.Editor.Compiling
             Light.FindLights(map, out lights);
             lights.RemoveAll(l => !l.HasSprite && !l.AlwaysExport);
 
-            IEnumerable<Face> transparentFaces = map.WorldSpawn.Find(x => x is Solid).OfType<Solid>().SelectMany(x => x.Faces).Where(x =>
+            var transparentFaces = map.WorldSpawn.Find(x => x is Solid).OfType<Solid>().SelectMany(x => x.Faces).Where(x =>
             {
                 if (x.Texture?.Texture == null) return false;
                 if (!x.Texture.Texture.HasTransparency()) return false;
                 if (x.Texture.Name.Contains("tooltextures")) return false;
 
                 return true;
-            });
+            }).ToArray();
 
-            IEnumerable<Face> invisibleCollisionFaces = map.WorldSpawn.Find(x => x is Solid).OfType<Solid>().SelectMany(x => x.Faces).Where(x => x.Texture.Name.ToLowerInvariant() == "tooltextures/invisible_collision");
+            var invisibleCollisionFaces = map.WorldSpawn.Find(x => x is Solid)
+                .OfType<Solid>()
+                .SelectMany(x => x.Faces)
+                .Where(x => x.Texture.Name.ToLowerInvariant() == "tooltextures/invisible_collision")
+                .ToArray();
 
-            IEnumerable<Entity> triggerBoxes = map.WorldSpawn.Find(x => x.ClassName?.ToLower() == "triggerbox").OfType<Entity>().ToArray();
+            var triggerBoxes = map.WorldSpawn.Find(x => x.ClassName?.ToLower() == "triggerbox")
+                .OfType<Entity>()
+                .ToArray();
             if (!triggerBoxes.Any() && map.WorldSpawn.Find(x => x is Solid).OfType<Solid>().SelectMany(x => x.Faces).Any(x =>
                     x.Texture.Name.ToLowerInvariant() == "tooltextures/triggerbox")) {
                 throw new Exception(
@@ -77,17 +83,25 @@ namespace CBRE.Editor.Compiling
             Lightmapper.SaveLightmaps(document, lmCount, filepath + "/" + lmPath, false);
             lmPath = System.IO.Path.GetFileName(lmPath);
 
-            List<Waypoint> waypoints = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "waypoint").OfType<Entity>()
-                .Select(x => new Waypoint(x)).ToList();
+            var waypoints = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "waypoint").OfType<Entity>()
+                .Select(x => new Waypoint(x))
+                .ToArray();
 
-            IEnumerable<Entity> soundEmitters = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "soundemitter").OfType<Entity>();
+            var soundEmitters = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "soundemitter")
+                .OfType<Entity>()
+                .ToArray();
 
-            IEnumerable<Entity> props = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "model").OfType<Entity>();
+            var props = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "model")
+                .OfType<Entity>()
+                .ToArray();
 
-            IEnumerable<Entity> screens = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "screen").OfType<Entity>();
+            var screens = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "screen")
+                .OfType<Entity>()
+                .ToArray();
 
-            IEnumerable<Entity> customEntities = map.WorldSpawn.Find(x => x.ClassName != null).OfType<Entity>()
-                .Where(x => x.GameData != null && x.GameData.IsCustom);
+            var customEntities = map.WorldSpawn.Find(x => x.ClassName != null).OfType<Entity>()
+                .Where(x => x.GameData != null && x.GameData.IsCustom)
+                .ToArray();
 
             FileStream stream = new FileStream(filepath + "/" + filename, FileMode.Create);
             BinaryWriter br = new BinaryWriter(stream);
@@ -124,132 +138,144 @@ namespace CBRE.Editor.Compiling
             //Making each face its own collision object is too slow, and merging all of
             //them together is not optimal either.
 
-            int texCount = 0;
-            for (int i = 0; i < textures.Count; i++)
-            {
-                texCount += faces.Where(x => x.Texture == textures[i].Item1).Select(x => x.LmIndex).Distinct().Count();
-                texCount += transparentFaces.Any(x => x.Texture.Name == textures[i].Item1) ? 1 : 0;
+            var noCollFaces = map.WorldSpawn.Find(x => x.ClassName?.ToLower() == "nocoll").OfType<Entity>()
+                .SelectMany(x => x.GetChildren().OfType<Solid>())
+                .SelectMany(x => x.Faces)
+                .ToHashSet();
+            
+            WriteFaces(
+                faces.Where(x => !noCollFaces.Contains(x.OriginalFace)).ToArray(),
+                transparentFaces.Where(x => !noCollFaces.Contains(x)).ToArray());
+            
+            if (is1_3_12) {
+                WriteFaces(
+                    faces.Where(x => noCollFaces.Contains(x.OriginalFace)).ToArray(),
+                    transparentFaces.Where(noCollFaces.Contains).ToArray());
             }
-
-            br.Write(texCount);
-
-            for (int i = 0; i < textures.Count; i++)
-            {
-                string texName = Directories.GetTextureExtension(textures[i].Item1);
-
-                for (int lmInd = 0; lmInd < lmCount; lmInd++)
+            
+            void WriteFaces(ICollection<LMFace> faces, ICollection<Face> transparentFaces) {
+                int texCount = 0;
+                for (int i = 0; i < textures.Count; i++)
                 {
-                    LMFace[] tLmFaces = faces.FindAll(x => x.Texture == textures[i].Item1 && x.LmIndex == lmInd).ToArray();
-                    Face[] tTrptFaces = transparentFaces.Where(x => x.Texture.Name == textures[i].Item1).ToArray();
-                    vertCount = 0;
-                    vertOffset = 0;
-                    triCount = 0;
+                    texCount += faces.Where(x => x.Texture == textures[i].Item1).Select(x => x.LmIndex).Distinct().Count();
+                    texCount += transparentFaces.Any(x => x.Texture.Name == textures[i].Item1) ? 1 : 0;
+                }
 
-                    if (tLmFaces.Length > 0)
+                br.Write(texCount);
+
+                for (int i = 0; i < textures.Count; i++)
+                {
+                    string texName = Directories.GetTextureExtension(textures[i].Item1);
+
+                    for (int lmInd = 0; lmInd < lmCount; lmInd++)
                     {
-                        foreach (LMFace face in tLmFaces)
+                        LMFace[] tLmFaces = faces.Where(x => x.Texture == textures[i].Item1 && x.LmIndex == lmInd).ToArray();
+                        Face[] tTrptFaces = transparentFaces.Where(x => x.Texture.Name == textures[i].Item1).ToArray();
+                        vertCount = 0;
+                        vertOffset = 0;
+                        triCount = 0;
+
+                        if (tLmFaces.Length > 0)
                         {
-                            vertCount += face.Vertices.Count;
-                            triCount += face.GetTriangleIndices().Count() / 3;
-                        }
-
-                        byte flag = 1;
-                        br.Write(flag);
-                        string currLmPath = lmPath + (lmCount > 1 ? "_" + lmInd.ToString() : "");
-                        currLmPath += ".png";
-                        br.WriteB3DString(currLmPath);
-
-                        flag = 1;
-                        br.Write(flag);
-                        br.WriteB3DString(texName);
-
-                        if (vertCount > UInt16.MaxValue) throw new Exception("Vertex overflow: " + texName);
-                        br.Write((Int32)vertCount);
-                        foreach (LMFace face in tLmFaces)
-                        {
-                            for (int j = 0; j < face.Vertices.Count; j++)
+                            foreach (LMFace face in tLmFaces)
                             {
-                                br.Write(face.Vertices[j].Location.X);
-                                br.Write(face.Vertices[j].Location.Z);
-                                br.Write(face.Vertices[j].Location.Y);
-
-                                br.Write(face.Vertices[j].DiffU);
-                                br.Write(face.Vertices[j].DiffV);
-
-                                float lmMul = (lmCount > 1) ? 2.0f : 1.0f;
-                                float uSub = ((lmInd % 2) > 0) ? 0.5f : 0.0f;
-                                float vSub = ((lmInd / 2) > 0) ? 0.5f : 0.0f;
-
-                                br.Write((face.Vertices[j].LMU - uSub) * lmMul);
-                                br.Write((face.Vertices[j].LMV - vSub) * lmMul);
-
-                                br.Write((byte)255); //r
-                                br.Write((byte)255); //g
-                                br.Write((byte)255); //b
-                            }
-                        }
-                        br.Write((Int32)triCount);
-                        foreach (LMFace face in tLmFaces)
-                        {
-                            foreach (uint ind in face.GetTriangleIndices())
-                            {
-                                br.Write((Int32)(ind + vertOffset));
+                                vertCount += face.Vertices.Count;
+                                triCount += face.GetTriangleIndices().Count() / 3;
                             }
 
-                            vertOffset += face.Vertices.Count;
-                        }
-                    }
-                    else if (lmInd == 0 && tTrptFaces.Length > 0)
-                    {
-                        foreach (Face face in tTrptFaces)
-                        {
-                            vertCount += face.Vertices.Count;
-                            triCount += face.GetTriangleIndices().Count() / 3;
-                        }
+                            byte flag = 1;
+                            br.Write(flag);
+                            string currLmPath = lmPath + (lmCount > 1 ? "_" + lmInd.ToString() : "");
+                            currLmPath += ".png";
+                            br.WriteB3DString(currLmPath);
 
-                        byte flag = 0;
-                        br.Write(flag);
-                        flag = 3;
-                        br.Write(flag);
-                        br.WriteB3DString(texName);
+                            flag = 1;
+                            br.Write(flag);
+                            br.WriteB3DString(texName);
 
-                        if (vertCount > UInt16.MaxValue) throw new Exception("Vertex overflow!");
-                        br.Write((Int32)vertCount);
-                        foreach (Face face in tTrptFaces)
-                        {
-                            for (int j = 0; j < face.Vertices.Count; j++)
+                            if (vertCount > UInt16.MaxValue) throw new Exception("Vertex overflow: " + texName);
+                            br.Write((Int32)vertCount);
+                            foreach (LMFace face in tLmFaces)
                             {
-                                br.Write((float)face.Vertices[j].Location.X);
-                                br.Write((float)face.Vertices[j].Location.Z);
-                                br.Write((float)face.Vertices[j].Location.Y);
+                                for (int j = 0; j < face.Vertices.Count; j++)
+                                {
+                                    br.Write(face.Vertices[j].Location.X);
+                                    br.Write(face.Vertices[j].Location.Z);
+                                    br.Write(face.Vertices[j].Location.Y);
 
-                                br.Write((float)face.Vertices[j].TextureU);
-                                br.Write((float)face.Vertices[j].TextureV);
-                                br.Write(0.0f);
-                                br.Write(0.0f);
+                                    br.Write(face.Vertices[j].DiffU);
+                                    br.Write(face.Vertices[j].DiffV);
 
-                                br.Write((byte)255); //r
-                                br.Write((byte)255); //g
-                                br.Write((byte)255); //b
+                                    float lmMul = (lmCount > 1) ? 2.0f : 1.0f;
+                                    float uSub = ((lmInd % 2) > 0) ? 0.5f : 0.0f;
+                                    float vSub = ((lmInd / 2) > 0) ? 0.5f : 0.0f;
+
+                                    br.Write((face.Vertices[j].LMU - uSub) * lmMul);
+                                    br.Write((face.Vertices[j].LMV - vSub) * lmMul);
+
+                                    br.Write((byte)255); //r
+                                    br.Write((byte)255); //g
+                                    br.Write((byte)255); //b
+                                }
+                            }
+                            br.Write((Int32)triCount);
+                            foreach (LMFace face in tLmFaces)
+                            {
+                                foreach (uint ind in face.GetTriangleIndices())
+                                {
+                                    br.Write((Int32)(ind + vertOffset));
+                                }
+
+                                vertOffset += face.Vertices.Count;
                             }
                         }
-                        br.Write((Int32)triCount);
-                        foreach (Face face in tTrptFaces)
+                        else if (lmInd == 0 && tTrptFaces.Length > 0)
                         {
-                            foreach (uint ind in face.GetTriangleIndices())
+                            foreach (Face face in tTrptFaces)
                             {
-                                br.Write((Int32)(ind + vertOffset));
+                                vertCount += face.Vertices.Count;
+                                triCount += face.GetTriangleIndices().Count() / 3;
                             }
 
-                            vertOffset += face.Vertices.Count;
+                            byte flag = 0;
+                            br.Write(flag);
+                            flag = 3;
+                            br.Write(flag);
+                            br.WriteB3DString(texName);
+
+                            if (vertCount > UInt16.MaxValue) throw new Exception("Vertex overflow!");
+                            br.Write((Int32)vertCount);
+                            foreach (Face face in tTrptFaces)
+                            {
+                                for (int j = 0; j < face.Vertices.Count; j++)
+                                {
+                                    br.Write((float)face.Vertices[j].Location.X);
+                                    br.Write((float)face.Vertices[j].Location.Z);
+                                    br.Write((float)face.Vertices[j].Location.Y);
+
+                                    br.Write((float)face.Vertices[j].TextureU);
+                                    br.Write((float)face.Vertices[j].TextureV);
+                                    br.Write(0.0f);
+                                    br.Write(0.0f);
+
+                                    br.Write((byte)255); //r
+                                    br.Write((byte)255); //g
+                                    br.Write((byte)255); //b
+                                }
+                            }
+                            br.Write((Int32)triCount);
+                            foreach (Face face in tTrptFaces)
+                            {
+                                foreach (uint ind in face.GetTriangleIndices())
+                                {
+                                    br.Write((Int32)(ind + vertOffset));
+                                }
+
+                                vertOffset += face.Vertices.Count;
+                            }
                         }
                     }
                 }
-            }
-
-            if (is1_3_12) {
-                // Visible brushes without collision. TODO
-                br.Write((Int32)0);
             }
 
             if (invisibleCollisionFaces.Count() > 0)
@@ -329,8 +355,8 @@ namespace CBRE.Editor.Compiling
                 }
             }
 
-            br.Write((lights.Count + waypoints.Count + soundEmitters.Count() + props.Count() + screens.Count()
-                + customEntities.Count()));
+            br.Write((lights.Count + waypoints.Length + soundEmitters.Length + props.Length + screens.Length
+                      + customEntities.Length));
 
             foreach (Light light in lights)
             {

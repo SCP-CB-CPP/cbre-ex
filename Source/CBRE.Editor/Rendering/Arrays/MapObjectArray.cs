@@ -198,7 +198,8 @@ namespace CBRE.Editor.Rendering.Arrays
         private bool HasTransparency(Face face)
         {
             return face.Opacity < 0.95
-                   || (face.Texture.Texture != null && face.Texture.Texture.HasTransparency());
+                   || (face.Texture.Texture != null && face.Texture.Texture.HasTransparency())
+                   || IsNoColl(face);
         }
 
         protected IEnumerable<MapObjectVertex> Convert(Face face)
@@ -210,6 +211,10 @@ namespace CBRE.Editor.Rendering.Arrays
                   g = face.Colour.G / 255f,
                   b = face.Colour.B / 255f,
                   a = face.Opacity;
+            // Hacky as shit but who gaf.
+            if (IsNoColl(face)) {
+                a /= 2;
+            }
             List<Vertex> lmed = face.GetIndexedVertices().Where(v => v.LMU != 0).ToList();
             return face.GetIndexedVertices().Select(vert => new MapObjectVertex
             {
@@ -221,5 +226,7 @@ namespace CBRE.Editor.Rendering.Arrays
                 IsSelected = face.IsSelected || (face.Parent != null && face.Parent.IsSelected) ? 1 : 0
             });
         }
+        
+        private static bool IsNoColl(Face face) => face.Parent.Parent?.ClassName == "nocoll";
     }
 }

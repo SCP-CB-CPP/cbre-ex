@@ -161,9 +161,8 @@ namespace CBRE.DataStructures.GameData
             GameDataObject noShadowObj = new GameDataObject("noshadow", "Disables shadow casting for this brush.", ClassType.Solid);
             Classes.Add(noShadowObj);
             
-            // TODO
-            //GameDataObject noCollisionObj = new GameDataObject("nocoll", "Disables collisions for this brush.", ClassType.Solid);
-            //Classes.Add(noCollisionObj);
+            GameDataObject noCollisionObj = new GameDataObject("nocoll", "Disables collisions for this brush.", ClassType.Solid);
+            Classes.Add(noCollisionObj);
 
             GameDataObject triggerBoxObj = new GameDataObject("triggerbox", "Turns this brush into a trigger box.", ClassType.Solid);
             triggerBoxObj.Properties.Add(new Property("name", VariableType.String) { ShortDescription = "Name", DefaultValue = "" });
