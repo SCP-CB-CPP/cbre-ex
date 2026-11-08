@@ -168,6 +168,7 @@ namespace CBRE.DataStructures.MapObjects
             back = CreateFromIntersectingPlanes(backPlanes, generator);
             front = CreateFromIntersectingPlanes(frontPlanes, generator);
 
+            // This is a bandaid fix because I really don't want to touch the underlying math.
             var extendedBox = new Box(
                 (BoundingBox.Start - BoundingBox.Center) * 1.1m + BoundingBox.Center,
                 (BoundingBox.End - BoundingBox.Center) * 1.1m + BoundingBox.Center);
