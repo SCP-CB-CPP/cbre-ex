@@ -104,9 +104,6 @@ namespace CBRE.Editor.Compiling
             using (SaveFileDialog save = new SaveFileDialog())
             {
                 string filter = "";
-#if RM2
-                filter += "SCP-CB v1.4 RM2 (*.rm2)|*.rm2|";
-#endif
                 filter += "SCP-CB v1.3.12 RMesh (*.rmesh)|*.rmesh";
                 filter += "|SCP-CB v1.3.11 RMesh (*.rmesh)|*.rmesh";
                 filter += "|Graphics Language Binary (*.glb)|*.glb";
@@ -267,11 +264,7 @@ namespace CBRE.Editor.Compiling
                 if (export)
                 {
                     string extension = System.IO.Path.GetExtension(SaveFileName);
-                    if (extension.Equals(".rm2", StringComparison.OrdinalIgnoreCase))
-                    {
-                        RM2Export.SaveToFile(SaveFileName, Document, this);
-                    }
-                    else if (extension.Equals(".rmesh", StringComparison.OrdinalIgnoreCase))
+                    if (extension.Equals(".rmesh", StringComparison.OrdinalIgnoreCase))
                     {
                         RMeshExport.SaveToFile(SaveFileName, Document, this, Is1312Rmesh);
                         if (SteamClient.IsValid)
