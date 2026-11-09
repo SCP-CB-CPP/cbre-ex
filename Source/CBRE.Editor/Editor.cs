@@ -33,6 +33,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using CBRE.Editor.Compiling;
 using Steamworks;
 using LayoutSettings = CBRE.Editor.UI.Layout.LayoutSettings;
 
@@ -306,6 +307,8 @@ namespace CBRE.Editor
 
 			Mediator.Subscribe(HotkeysMediator.FileNew, this);
 			Mediator.Subscribe(HotkeysMediator.FileOpen, this);
+			
+			Mediator.Subscribe(HotkeysMediator.FileBulkExport, this);
 
 			Mediator.Subscribe(HotkeysMediator.PreviousTab, this);
 			Mediator.Subscribe(HotkeysMediator.NextTab, this);
@@ -378,6 +381,10 @@ namespace CBRE.Editor
 				if (ofd.ShowDialog() != DialogResult.OK) return;
 				LoadFile(ofd.FileName);
 			}
+		}
+
+		private static void FileBulkExport() {
+			new BulkExportForm().ShowDialog();
 		}
 
 		private void PreviousTab()

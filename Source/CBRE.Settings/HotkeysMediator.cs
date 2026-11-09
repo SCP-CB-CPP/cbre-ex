@@ -25,6 +25,8 @@ namespace CBRE.Settings
         FileExport,*/
         [Description("Export / Lightmap")]
         FileCompile,
+        [Description("Bulk Export")]
+        FileBulkExport,
 
         [Description("Undo")]
         HistoryUndo,

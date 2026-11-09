@@ -55,6 +55,7 @@ namespace CBRE.Editor.Menu
             Add("File", new SimpleMenuBuilder("Save As...", HotkeysMediator.FileSaveAs) { Image = Resources.Menu_SaveAs, IsVisible = mapOpen });
             Add("File", new MenuSplitter { IsVisible = mapOpen, ShowInToolStrip = true });
             Add("File", new SimpleMenuBuilder("Export / Lightmap", HotkeysMediator.FileCompile) { Image = Resources.Menu_ExportRmesh, IsVisible = mapOpen, ShowInToolStrip = true });
+            Add("File", new SimpleMenuBuilder("Bulk Export", HotkeysMediator.FileBulkExport) { Image = Resources.Menu_ExportRmesh, IsVisible = () => true, ShowInToolStrip = true });
             Add("File", new RecentFilesMenu());
             Add("File", new MenuSplitter());
             Add("File", new SimpleMenuBuilder("Exit", EditorMediator.Exit));

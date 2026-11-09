@@ -385,6 +385,7 @@
     <EmbeddedResource Include="Brushes\Controls\TextControl.resx">
       <DependentUpon>TextControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Compiling\BulkExportForm.resx" />
     <EmbeddedResource Include="Compiling\ExportForm.resx">
       <DependentUpon>ExportForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -526,6 +527,9 @@
     <None Include="Models\**">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Update="Compiling\BulkExportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\MAPFiles.pdf" />
