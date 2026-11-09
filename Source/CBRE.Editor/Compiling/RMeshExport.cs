@@ -432,7 +432,7 @@ namespace CBRE.Editor.Compiling
                 if (is1_3_12 && EXPORTED_VERSION >= 2) {
                     br.Write(prop.EntityData.GetPropertyValue("hascollision")?.ToBool() ?? true);
                     br.Write(int.Parse(prop.EntityData.GetPropertyValue("effects") ?? "0"));
-                    br.WriteB3DString(Path.GetFileName(prop.EntityData.GetPropertyValue("textureoverride") ?? ""));
+                    br.WriteB3DString(prop.EntityData.GetPropertyValue("textureoverride") ?? "");
                 }
             }
 
