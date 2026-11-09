@@ -17,16 +17,6 @@ namespace CBRE.Editor.Compiling
 {
     public class RMeshExport
     {
-        public class Waypoint
-        {
-            public Waypoint(Entity ent)
-            {
-                Location = new CoordinateF(ent.Origin);
-            }
-
-            public CoordinateF Location;
-        }
-
         enum RMeshLoadFlags
         {
             COLOR = 1,
@@ -45,27 +35,74 @@ namespace CBRE.Editor.Compiling
         public static void SaveToFile(string filename, Document document, ExportForm form, bool is1_3_12)
         {
             Map map = document.Map;
-            string filepath = System.IO.Path.GetDirectoryName(filename);
-            filename = System.IO.Path.GetFileName(filename);
-            filename = System.IO.Path.GetFileNameWithoutExtension(filename) + ".rmesh";
-            string lmPath = System.IO.Path.GetFileNameWithoutExtension(filename) + "_lm";
+            string filepath = Path.GetDirectoryName(filename);
+            filename = Path.GetFileName(filename);
+            filename = Path.GetFileNameWithoutExtension(filename) + ".rmesh";
+            string lmPath = Path.GetFileNameWithoutExtension(filename) + "_lm";
             
-            if (CBRE.Settings.Exporting.ForceLightmapOnExport) Lightmapper.Render(document, form, out _, out _);
+            if (Exporting.ForceLightmapOnExport) Lightmapper.Render(document, form, out _, out _);
 
-            List<Face> faces = new();
-            List<Face> transparentFaces = new();
+            var entities = map.WorldSpawn.Find(x => x.ClassName != null)
+                .OfType<Entity>()
+                .GroupBy(x => x.ClassName.ToLowerInvariant())
+                .ToDictionary(x => x.Key, x => x);
+            
+            var triggerBoxes = entities.TryGetValue("triggerbox", out var tb) ? tb.ToArray() : [];
+            
+            List<Face> faces = [];
+            List<Face> transparentFaces = [];
+            List<Face> facesNoColl = [];
+            List<Face> transparentFacesNoColl = [];
+            List<Face> invisibleCollisionFaces = [];
             var lmCount = 0;
+            
+            List<Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>> textures = [];
 
-            foreach (var face in map.WorldSpawn.Find(x => x is Solid).Cast<Solid>().SelectMany(x => x.Faces)) {
+            var warnedNoColl1_3_11 = false;
+            
+            foreach (var (face, noColl) in map.WorldSpawn.Find(x => x is Solid).Cast<Solid>().SelectMany(x => x.Faces
+                         .Select(y => (y, x.Parent?.ClassName?.ToLowerInvariant() == "nocoll")))) {
+                var texName = face.Texture?.Name.ToLowerInvariant();
+
+                switch (texName)
+                {
+                    case null:
+                    case "tooltextures/invisible_collision":
+                        invisibleCollisionFaces.Add(face);
+                        continue;
+                    case "tooltextures/triggerbox":
+                        if (!triggerBoxes.Any())
+                            throw new(
+                                "The map contains trigger box faces, but no trigger box entities were found. Trigger boxes require an entity to function! Use \"Tie to Entity\" with your brush selected.");
+                        continue;
+                }
+                
+                if (face.Texture.IsToolTexture || face.Texture.Texture == null)
+                    continue;
+
                 lmCount = Math.Max(lmCount, face.LmIndex + 1);
 
-                (IsTransparent(face) ? transparentFaces : faces).Add(face);
-
-                bool IsTransparent(Face f) {
-                    if (f.Texture?.Texture == null) return false;
-                    if (!f.Texture.Texture.HasTransparency()) return false;
-                    if (f.Texture.Name.Contains("tooltextures")) return false;
-                    return true;
+                var isNoColl = noColl;
+                if (noColl && !is1_3_12) {
+                    if (!warnedNoColl1_3_11) {
+                        warnedNoColl1_3_11 = true;
+                        form.ProgressLog.Invoke((MethodInvoker)(() => {
+                            form.ProgressLog.SelectionColor = Color.Red;
+                            form.ProgressLog.AppendText(
+                                "\nWarning: This map contains nocoll brush entities that are not supported in CB v1.3.11. " +
+                                "The brushes will have collision.");
+                            form.ProgressLog.SelectionColor = form.ProgressLog.ForeColor;
+                        }));
+                    }
+                    isNoColl = false;
+                }
+                
+                if (face.Texture.Texture.HasTransparency()) {
+                    (isNoColl ? transparentFacesNoColl : transparentFaces).Add(face);
+                    if (textures.All(x => x.Item1 != face.Texture.Name)) textures.Add(new(face.Texture.Name, RMeshLoadFlags.ALPHA, RMeshBlendFlags.NORMAL, 0));
+                } else {
+                    (isNoColl ? facesNoColl : faces).Add(face);
+                    if (textures.All(x => x.Item1 != face.Texture.Name)) textures.Add(new(face.Texture.Name, RMeshLoadFlags.COLOR, RMeshBlendFlags.DIFFUSE, 0));
                 }
             }
 
@@ -73,43 +110,19 @@ namespace CBRE.Editor.Compiling
             Light.FindLights(map, out lights);
             lights.RemoveAll(l => !l.HasSprite && !l.AlwaysExport);
 
-            var invisibleCollisionFaces = map.WorldSpawn.Find(x => x is Solid)
-                .OfType<Solid>()
-                .SelectMany(x => x.Faces)
-                .Where(x => x.Texture.Name.ToLowerInvariant() == "tooltextures/invisible_collision")
-                .ToArray();
-
-            var triggerBoxes = map.WorldSpawn.Find(x => x.ClassName?.ToLower() == "triggerbox")
-                .OfType<Entity>()
-                .ToArray();
-            if (!triggerBoxes.Any() && map.WorldSpawn.Find(x => x is Solid).OfType<Solid>().SelectMany(x => x.Faces).Any(x =>
-                    x.Texture.Name.ToLowerInvariant() == "tooltextures/triggerbox")) {
-                throw new Exception(
-                    "The map contains trigger box faces, but no trigger box entities were found. Trigger boxes require an entity to function! Use \"Tie to Entity\" with your brush selected.");
-            }
-
             Lightmapper.SaveLightmaps(document, lmCount, filepath + "/" + lmPath, false);
-            lmPath = System.IO.Path.GetFileName(lmPath);
+            lmPath = Path.GetFileName(lmPath);
 
-            var waypoints = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "waypoint").OfType<Entity>()
-                .Select(x => new Waypoint(x))
+            var customEntities = document.GameData.Classes
+                .Where(x => x.IsCustom)
+                .Select(x => x.Name.ToLowerInvariant())
+                .SelectMany(x => entities.TryGetValue(x, out var g) ? g : Enumerable.Empty<Entity>())
                 .ToArray();
-
-            var soundEmitters = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "soundemitter")
-                .OfType<Entity>()
-                .ToArray();
-
-            var props = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "model")
-                .OfType<Entity>()
-                .ToArray();
-
-            var screens = map.WorldSpawn.Find(x => x.ClassName != null && x.ClassName.ToLower() == "screen")
-                .OfType<Entity>()
-                .ToArray();
-
-            var customEntities = map.WorldSpawn.Find(x => x.ClassName != null).OfType<Entity>()
-                .Where(x => x.GameData != null && x.GameData.IsCustom)
-                .ToArray();
+            
+            var waypoints = entities.TryGetValue("waypoint", out var wp) ? wp.ToArray() : [];
+            var soundEmitters = entities.TryGetValue("soundemitter", out var se) ? se.ToArray() : [];
+            var props = entities.TryGetValue("model", out var p) ? p.ToArray() : [];
+            var screens = entities.TryGetValue("screen", out var s) ? s.ToArray() : [];
 
             FileStream stream = new FileStream(filepath + "/" + filename, FileMode.Create);
             BinaryWriter br = new BinaryWriter(stream);
@@ -120,19 +133,6 @@ namespace CBRE.Editor.Compiling
                 br.Write(EXPORTED_VERSION);
             } else {
                 br.WriteB3DString(triggerBoxes.Any() ? "RoomMesh.HasTriggerBox" : "RoomMesh");
-            }
-
-            //textures
-            List<Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>> textures = new List<Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>>();
-            RMeshLoadFlags loadFlag = RMeshLoadFlags.COLOR; RMeshBlendFlags blendFlag = RMeshBlendFlags.DIFFUSE;
-            foreach (var face in faces)
-            {
-                if (!textures.Any(x => x.Item1 == face.Texture.Name)) textures.Add(new Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>(face.Texture.Name, loadFlag, blendFlag, 0));
-            }
-            loadFlag = RMeshLoadFlags.ALPHA; blendFlag = RMeshBlendFlags.NORMAL;
-            foreach (Face face in transparentFaces)
-            {
-                if (!textures.Any(x => x.Item1 == face.Texture.Name)) textures.Add(new Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>(face.Texture.Name, loadFlag, blendFlag, 0));
             }
 
             //mesh
@@ -146,19 +146,10 @@ namespace CBRE.Editor.Compiling
             //Making each face its own collision object is too slow, and merging all of
             //them together is not optimal either.
 
-            var noCollFaces = map.WorldSpawn.Find(x => x.ClassName?.ToLower() == "nocoll").OfType<Entity>()
-                .SelectMany(x => x.GetChildren().OfType<Solid>())
-                .SelectMany(x => x.Faces)
-                .ToHashSet();
-            
-            WriteFaces(
-                faces.Where(x => !noCollFaces.Contains(x)).ToArray(),
-                transparentFaces.Where(x => !noCollFaces.Contains(x)).ToArray());
+            WriteFaces(faces, transparentFaces);
             
             if (is1_3_12) {
-                WriteFaces(
-                    faces.Where(x => noCollFaces.Contains(x)).ToArray(),
-                    transparentFaces.Where(noCollFaces.Contains).ToArray());
+                WriteFaces(facesNoColl, transparentFacesNoColl);
             }
             
             void WriteFaces(ICollection<Face> faces, ICollection<Face> transparentFaces) {
@@ -286,7 +277,7 @@ namespace CBRE.Editor.Compiling
                 }
             }
 
-            if (invisibleCollisionFaces.Count() > 0)
+            if (invisibleCollisionFaces.Any())
             {
                 br.Write((Int32)1);
 
@@ -390,13 +381,13 @@ namespace CBRE.Editor.Compiling
                 br.Write(light.Intensity);
             }
 
-            foreach (Waypoint waypoint in waypoints)
+            foreach (var waypoint in waypoints)
             {
                 br.WriteB3DString("waypoint");
 
-                br.Write(waypoint.Location.X);
-                br.Write(waypoint.Location.Z);
-                br.Write(waypoint.Location.Y);
+                br.Write((float)waypoint.Origin.X);
+                br.Write((float)waypoint.Origin.Z);
+                br.Write((float)waypoint.Origin.Y);
             }
 
             foreach (Entity soundEmitter in soundEmitters)
@@ -419,7 +410,7 @@ namespace CBRE.Editor.Compiling
                 string modelName = prop.EntityData.GetPropertyValue("file") ?? "";
                 if (!modelName.Contains('.'))
                 {
-                    modelName = System.IO.Path.GetFileName(Directories.GetModelPath(modelName)) ?? (modelName + ".x");
+                    modelName = Path.GetFileName(Directories.GetModelPath(modelName)) ?? (modelName + ".x");
                 }
                 br.WriteB3DString(modelName);
 
