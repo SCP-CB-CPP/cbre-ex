@@ -49,21 +49,29 @@ namespace CBRE.Editor.Compiling
             filename = System.IO.Path.GetFileName(filename);
             filename = System.IO.Path.GetFileNameWithoutExtension(filename) + ".rmesh";
             string lmPath = System.IO.Path.GetFileNameWithoutExtension(filename) + "_lm";
+            
+            if (CBRE.Settings.Exporting.ForceLightmapOnExport) Lightmapper.Render(document, form, out _, out _);
 
-            List<LMFace> faces; int lmCount;
+            List<Face> faces = new();
+            List<Face> transparentFaces = new();
+            var lmCount = 0;
+
+            foreach (var face in map.WorldSpawn.Find(x => x is Solid).Cast<Solid>().SelectMany(x => x.Faces)) {
+                lmCount = Math.Max(lmCount, face.LmIndex + 1);
+
+                (IsTransparent(face) ? transparentFaces : faces).Add(face);
+
+                bool IsTransparent(Face f) {
+                    if (f.Texture?.Texture == null) return false;
+                    if (!f.Texture.Texture.HasTransparency()) return false;
+                    if (f.Texture.Name.Contains("tooltextures")) return false;
+                    return true;
+                }
+            }
+
             List<Light> lights;
-            Lightmapper.Render(document, form, out faces, out lmCount);
             Light.FindLights(map, out lights);
             lights.RemoveAll(l => !l.HasSprite && !l.AlwaysExport);
-
-            var transparentFaces = map.WorldSpawn.Find(x => x is Solid).OfType<Solid>().SelectMany(x => x.Faces).Where(x =>
-            {
-                if (x.Texture?.Texture == null) return false;
-                if (!x.Texture.Texture.HasTransparency()) return false;
-                if (x.Texture.Name.Contains("tooltextures")) return false;
-
-                return true;
-            }).ToArray();
 
             var invisibleCollisionFaces = map.WorldSpawn.Find(x => x is Solid)
                 .OfType<Solid>()
@@ -117,9 +125,9 @@ namespace CBRE.Editor.Compiling
             //textures
             List<Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>> textures = new List<Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>>();
             RMeshLoadFlags loadFlag = RMeshLoadFlags.COLOR; RMeshBlendFlags blendFlag = RMeshBlendFlags.DIFFUSE;
-            foreach (LMFace face in faces)
+            foreach (var face in faces)
             {
-                if (!textures.Any(x => x.Item1 == face.Texture)) textures.Add(new Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>(face.Texture, loadFlag, blendFlag, 0));
+                if (!textures.Any(x => x.Item1 == face.Texture.Name)) textures.Add(new Tuple<string, RMeshLoadFlags, RMeshBlendFlags, byte>(face.Texture.Name, loadFlag, blendFlag, 0));
             }
             loadFlag = RMeshLoadFlags.ALPHA; blendFlag = RMeshBlendFlags.NORMAL;
             foreach (Face face in transparentFaces)
@@ -144,20 +152,20 @@ namespace CBRE.Editor.Compiling
                 .ToHashSet();
             
             WriteFaces(
-                faces.Where(x => !noCollFaces.Contains(x.OriginalFace)).ToArray(),
+                faces.Where(x => !noCollFaces.Contains(x)).ToArray(),
                 transparentFaces.Where(x => !noCollFaces.Contains(x)).ToArray());
             
             if (is1_3_12) {
                 WriteFaces(
-                    faces.Where(x => noCollFaces.Contains(x.OriginalFace)).ToArray(),
+                    faces.Where(x => noCollFaces.Contains(x)).ToArray(),
                     transparentFaces.Where(noCollFaces.Contains).ToArray());
             }
             
-            void WriteFaces(ICollection<LMFace> faces, ICollection<Face> transparentFaces) {
+            void WriteFaces(ICollection<Face> faces, ICollection<Face> transparentFaces) {
                 int texCount = 0;
                 for (int i = 0; i < textures.Count; i++)
                 {
-                    texCount += faces.Where(x => x.Texture == textures[i].Item1).Select(x => x.LmIndex).Distinct().Count();
+                    texCount += faces.Where(x => x.Texture.Name == textures[i].Item1).Select(x => x.LmIndex).Distinct().Count();
                     texCount += transparentFaces.Any(x => x.Texture.Name == textures[i].Item1) ? 1 : 0;
                 }
 
@@ -169,7 +177,7 @@ namespace CBRE.Editor.Compiling
 
                     for (int lmInd = 0; lmInd < lmCount; lmInd++)
                     {
-                        LMFace[] tLmFaces = faces.Where(x => x.Texture == textures[i].Item1 && x.LmIndex == lmInd).ToArray();
+                        var tLmFaces = faces.Where(x => x.Texture.Name == textures[i].Item1 && x.LmIndex == lmInd).ToArray();
                         Face[] tTrptFaces = transparentFaces.Where(x => x.Texture.Name == textures[i].Item1).ToArray();
                         vertCount = 0;
                         vertOffset = 0;
@@ -177,7 +185,7 @@ namespace CBRE.Editor.Compiling
 
                         if (tLmFaces.Length > 0)
                         {
-                            foreach (LMFace face in tLmFaces)
+                            foreach (var face in tLmFaces)
                             {
                                 vertCount += face.Vertices.Count;
                                 triCount += face.GetTriangleIndices().Count() / 3;
@@ -195,16 +203,16 @@ namespace CBRE.Editor.Compiling
 
                             if (vertCount > UInt16.MaxValue) throw new Exception("Vertex overflow: " + texName);
                             br.Write((Int32)vertCount);
-                            foreach (LMFace face in tLmFaces)
+                            foreach (var face in tLmFaces)
                             {
                                 for (int j = 0; j < face.Vertices.Count; j++)
                                 {
-                                    br.Write(face.Vertices[j].Location.X);
-                                    br.Write(face.Vertices[j].Location.Z);
-                                    br.Write(face.Vertices[j].Location.Y);
+                                    br.Write((float)face.Vertices[j].Location.X);
+                                    br.Write((float)face.Vertices[j].Location.Z);
+                                    br.Write((float)face.Vertices[j].Location.Y);
 
-                                    br.Write(face.Vertices[j].DiffU);
-                                    br.Write(face.Vertices[j].DiffV);
+                                    br.Write((float)face.Vertices[j].TextureU);
+                                    br.Write((float)face.Vertices[j].TextureV);
 
                                     float lmMul = (lmCount > 1) ? 2.0f : 1.0f;
                                     float uSub = ((lmInd % 2) > 0) ? 0.5f : 0.0f;
@@ -219,7 +227,7 @@ namespace CBRE.Editor.Compiling
                                 }
                             }
                             br.Write((Int32)triCount);
-                            foreach (LMFace face in tLmFaces)
+                            foreach (var face in tLmFaces)
                             {
                                 foreach (uint ind in face.GetTriangleIndices())
                                 {

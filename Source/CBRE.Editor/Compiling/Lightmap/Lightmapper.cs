@@ -542,7 +542,14 @@ namespace CBRE.Editor.Compiling.Lightmap
                     string iPath = path + (threeBasisModel ? i.ToString() : "");
                     if (lmCount == 1)
                     {
-                        document.TextureCollection.Lightmaps[i].Save(iPath + ".png");
+                        var lm = document.TextureCollection.Lightmaps[i];
+                        if (lm == null) {
+                            using var bmp = new Bitmap(1, 1, PixelFormat.Format32bppArgb);
+                            bmp.SetPixel(0, 0, Color.FromArgb(127, 127, 127));
+                            bmp.Save(iPath + ".png");
+                        } else {
+                            lm.Save(iPath + ".png");
+                        }
                     }
                     else
                     {
@@ -635,6 +642,7 @@ namespace CBRE.Editor.Compiling.Lightmap
                 float v = (writeY + 0.5f + (y - group.minTotalY.Value) / LightmapConfig.DownscaleFactor);
 
                 targetFace.LmIndex = (u >= LightmapConfig.TextureDims ? 1 : 0) + (v >= LightmapConfig.TextureDims ? 2 : 0);
+                targetFace.OriginalFace.LmIndex = targetFace.LmIndex;
 
                 u /= (float)textureDims;
                 v /= (float)textureDims;

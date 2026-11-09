@@ -27,6 +27,8 @@ namespace CBRE.DataStructures.MapObjects
 
         public Box BoundingBox { get; set; }
 
+        public int LmIndex { get; set; }
+
         public Face(long id)
         {
             ID = id;

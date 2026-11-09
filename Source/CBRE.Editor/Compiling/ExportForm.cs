@@ -91,7 +91,7 @@ namespace CBRE.Editor.Compiling
 
         private void export_Click(object sender, EventArgs e)
         {
-            if (LightmapConfig.BakeModelShadows && CBRE.Settings.Exporting.ShowModelBakingWarning)
+            if (LightmapConfig.BakeModelShadows && CBRE.Settings.Exporting.ShowModelBakingWarning && CBRE.Settings.Exporting.ForceLightmapOnExport)
             {
                 DialogResult result = ShowPerformanceWarning();
 
