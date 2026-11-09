@@ -110,7 +110,7 @@ namespace CBRE.Editor.Compiling
             Light.FindLights(map, out lights);
             lights.RemoveAll(l => !l.HasSprite && !l.AlwaysExport);
 
-            Lightmapper.SaveLightmaps(document, lmCount, filepath + "/" + lmPath, false);
+            Lightmapper.SaveLightmaps(document, lmCount, Path.Combine(filepath, lmPath), false);
             lmPath = Path.GetFileName(lmPath);
 
             var customEntities = document.GameData.Classes
@@ -124,7 +124,7 @@ namespace CBRE.Editor.Compiling
             var props = entities.TryGetValue("model", out var p) ? p.ToArray() : [];
             var screens = entities.TryGetValue("screen", out var s) ? s.ToArray() : [];
 
-            FileStream stream = new FileStream(filepath + "/" + filename, FileMode.Create);
+            FileStream stream = new FileStream(Path.Combine(filepath, filename), FileMode.Create);
             BinaryWriter br = new BinaryWriter(stream);
 
             //header
