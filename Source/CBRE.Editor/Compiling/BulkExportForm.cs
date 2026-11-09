@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -44,14 +45,27 @@ public partial class BulkExportForm : Form {
             form.Document = doc;
             var output = Path.Combine("out", Path.ChangeExtension(Path.GetFileName(file), "rmesh"));
             Directory.CreateDirectory("out");
-            RMeshExport.SaveToFile(output, doc, form, true);
+            var fileName = Path.GetFileName(file);
+            try {
+                richTextBox1.Invoke((MethodInvoker)(() => richTextBox1.AppendText($"Processing {fileName}...\n")));
+                RMeshExport.SaveToFile(output, doc, form, true);
+            } catch (Exception e) {
+                richTextBox1.Invoke((MethodInvoker)(() => {
+                    richTextBox1.SelectionColor = Color.Red;
+                    richTextBox1.AppendText($"Error: {e.Message}\n{e.StackTrace}\n");
+                    richTextBox1.SelectionColor = richTextBox1.ForeColor;
+                }));
+            }
             progressBar1.Invoke((MethodInvoker)(() => progressBar1.Value = ++i));
             form.Invoke((MethodInvoker)(form.Close));
         }
         button1.Invoke((MethodInvoker)(() => button1.Enabled = true));
+        button2.Invoke((MethodInvoker)(() => button2.Enabled = false));
+        richTextBox1.Invoke((MethodInvoker)(() => richTextBox1.AppendText("Done!")));
     }
     
     private void button1_Click(object sender, EventArgs e) {
+        richTextBox1.Clear();
         button1.Enabled = false;
         button2.Enabled = true;
         _cancelled = false;
