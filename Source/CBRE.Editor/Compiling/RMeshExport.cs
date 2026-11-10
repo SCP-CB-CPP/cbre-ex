@@ -354,8 +354,9 @@ namespace CBRE.Editor.Compiling
                 }
             }
 
-            br.Write((lights.Count + waypoints.Length + soundEmitters.Length + props.Length + screens.Length
-                      + customEntities.Length));
+            var totalEntityCount = lights.Count + waypoints.Length + soundEmitters.Length + props.Length
+                                   + screens.Length + customEntities.Length;
+            br.Write(totalEntityCount);
 
             foreach (Light light in lights)
             {
@@ -479,6 +480,20 @@ namespace CBRE.Editor.Compiling
             br.Dispose();
             stream.Dispose();
 
+            form.ProgressLog.Invoke((MethodInvoker)(() => form.ProgressLog.AppendText(
+                $"""
+                
+                {faces.Count + transparentFaces.Count + facesNoColl.Count + transparentFacesNoColl.Count + invisibleCollisionFaces.Count} total faces
+                {transparentFaces.Count + transparentFacesNoColl.Count} of which transparent
+                {facesNoColl.Count + transparentFacesNoColl.Count} of which without collision
+                {invisibleCollisionFaces.Count} of which invisible collision
+                
+                {totalEntityCount} total entities
+                {lights.Count} of which are lights
+                {props.Length} of which are props
+                {waypoints.Length} of which are waypoints
+                """)));
+            
             form.ProgressLog.Invoke((MethodInvoker)(() => form.ProgressLog.AppendText("\nDone!")));
             form.ProgressBar.Invoke((MethodInvoker)(() => form.ProgressBar.Value = 10000));
         }
