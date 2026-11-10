@@ -33,6 +33,7 @@ using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using DarkModeForms;
 using Steamworks;
 using LayoutSettings = CBRE.Editor.UI.Layout.LayoutSettings;
 
@@ -42,6 +43,7 @@ namespace CBRE.Editor
 	{
 		private JumpList _jumpList;
 		private DiscordManager _DiscordManager;
+		private DarkModeCS _dark;
 		
 		public static Editor Instance { get; private set; }
 
@@ -52,6 +54,16 @@ namespace CBRE.Editor
 
 		public Editor()
 		{
+			if (General.EnableDarkMode) {
+				_dark = new(this) {
+					ColorizeIcons = false,
+					ColorMode = DarkModeCS.DisplayMode.DarkMode,
+				};	
+			}
+			
+			HandleCreated += (sender, args)
+				=> Icon = General.EnableDarkMode ? Properties.Resources.CBRE : Properties.Resources.CBRE_light;
+
 			PreventSimpleHotkeyPassthrough = false;
 			InitializeComponent();
 			Instance = this;
@@ -78,7 +90,7 @@ namespace CBRE.Editor
 				Map map = MapProvider.GetMapFromFile(fileName, Directories.ModelDirs, out lightmaps);
 				if (MapProvider.warnings != "")
 				{
-					MessageBox.Show(MapProvider.warnings, "WARNING", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+					DarkMessageBox.Show(MapProvider.warnings, "WARNING", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 				}
 				Document doc = new Document(fileName, map, game);
 				DocumentManager.AddAndSwitch(doc);
@@ -227,7 +239,7 @@ namespace CBRE.Editor
 		{
 			if (doc.History.TotalActionsSinceLastSave > 0)
 			{
-				DialogResult result = MessageBox.Show("Would you like to save your changes to " + doc.MapFileName + "?", "Changes Detected",
+				DialogResult result = DarkMessageBox.Show("Would you like to save your changes to " + doc.MapFileName + "?", "Changes Detected",
 					MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
 				if (result == DialogResult.Cancel)
 				{

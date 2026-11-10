@@ -13,13 +13,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.Settings
 {
     /// <summary>
     /// Description of SettingsForm.
     /// </summary>
-    public partial class SettingsForm : Form
+    public partial class SettingsForm : DarkModeForm
     {
         private List<Hotkey> _hotkeys;
 
@@ -509,6 +510,7 @@ namespace CBRE.Editor.Settings
         {
             AddHeading("General Settings");
             AddSetting(() => CBRE.Settings.General.EnableDiscordPresence, "Enable Discord rich presence");
+            AddSetting(() => CBRE.Settings.General.EnableDarkMode, "Enable dark mode (requires restart)");
 
             AddHeading("Object Creation");
             AddSetting(() => CBRE.Settings.Select.SwitchToSelectAfterCreation, "Switch to selection tool after brush creation");
@@ -1019,7 +1021,7 @@ namespace CBRE.Editor.Settings
                 Hotkey conflict = _hotkeys.FirstOrDefault(x => x.HotkeyString == key && x != hk);
                 if (conflict != null)
                 {
-                    if (MessageBox.Show(key + " is already assigned to \"" + Hotkeys.GetHotkeyDefinition(conflict.ID) + "\".\n" +
+                    if (DarkMessageBox.Show(key + " is already assigned to \"" + Hotkeys.GetHotkeyDefinition(conflict.ID) + "\".\n" +
                                         "Continue anyway?", "Conflict Detected", MessageBoxButtons.YesNo) == DialogResult.No)
                     {
                         return;
@@ -1074,7 +1076,7 @@ namespace CBRE.Editor.Settings
             Hotkey conflict = _hotkeys.FirstOrDefault(x => x.HotkeyString == key);
             if (conflict != null)
             {
-                if (MessageBox.Show(key + " is already assigned to \"" + Hotkeys.GetHotkeyDefinition(conflict.ID) + "\".\n" +
+                if (DarkMessageBox.Show(key + " is already assigned to \"" + Hotkeys.GetHotkeyDefinition(conflict.ID) + "\".\n" +
                                     "Continue anyway?", "Conflict Detected", MessageBoxButtons.YesNo) == DialogResult.No)
                 {
                     return;

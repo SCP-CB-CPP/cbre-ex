@@ -260,7 +260,7 @@ namespace CBRE.Editor.Visgroups
 
         private void OnDragDrop(object sender, DragEventArgs e)
         {
-            //MessageBox.Show("blah?");
+            //DarkMessageBox.Show("blah?");
         }
 
         private void OnDragEnter(object sender, DragEventArgs e)

@@ -1,10 +1,11 @@
 ﻿using CBRE.Common.Mediator;
 using System.Reflection;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI
 {
-	public partial class AboutDialog : Form
+	public partial class AboutDialog : DarkModeForm
 	{
 		public AboutDialog()
 		{

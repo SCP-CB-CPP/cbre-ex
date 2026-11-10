@@ -11,10 +11,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using CBRE.Settings;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI.ObjectProperties
 {
-    public partial class ObjectPropertiesDialog : Form, IMediatorListener
+    public partial class ObjectPropertiesDialog : DarkModeForm, IMediatorListener
     {
         private static int _numOpen = 0;
         public static bool IsShowing { get { return _numOpen > 0; } }
@@ -112,7 +114,7 @@ namespace CBRE.Editor.UI.ObjectProperties
                 Document.PerformAction(actionText, ac);
             }
 
-            Class.BackColor = Color.White;
+            Class.BackColor = _dark.OScolors.Control;
         }
 
         private EditEntityData GetEditEntityDataAction()
@@ -126,7 +128,7 @@ namespace CBRE.Editor.UI.ObjectProperties
                 EntityData entityData = entity.GetEntityData().Clone();
                 bool changed = false;
                 // Updated class
-                if (Class.BackColor == Color.LightGreen)
+                if (Class.BackColor == (General.EnableDarkMode ? Color.DarkGreen : Color.LightGreen))
                 {
                     entityData.Name = Class.Text;
                     entity.ClassName = Class.Text;
@@ -290,6 +292,7 @@ namespace CBRE.Editor.UI.ObjectProperties
 
         protected override void OnLoad(EventArgs e)
         {
+            base.OnLoad(e);
             _numOpen += 1;
             UpdateObjects();
 
@@ -312,9 +315,11 @@ namespace CBRE.Editor.UI.ObjectProperties
             if (!Objects.Any())
             {
                 Tabs.TabPages.Clear();
+                Tabs.Visible = false;
                 return;
             }
 
+            Tabs.Visible = true;
             UpdateVisgroups(false);
 
             TabPage[] beforeTabs = Tabs.TabPages.OfType<TabPage>().ToArray();
@@ -407,7 +412,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             {
                 string dt = smartEdit ? tv.DisplayText(Document.GameData) : tv.OriginalKey;
                 string dv = smartEdit ? tv.DisplayValue(Document.GameData) : tv.Value;
-                KeyValuesList.Items.Add(new ListViewItem(dt) { Tag = tv.OriginalKey, BackColor = tv.GetColour() }).SubItems.Add(dv);
+                KeyValuesList.Items.Add(new ListViewItem(dt) { Tag = tv.OriginalKey, BackColor = tv.GetColour(KeyValuesList) }).SubItems.Add(dv);
             }
 
             Angles.Enabled = false;
@@ -438,7 +443,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             if (_populating) return;
             KeyValuesList.SelectedItems.Clear();
             _changingClass = true;
-            Class.BackColor = Color.LightBlue;
+            Class.BackColor = General.EnableDarkMode ? Color.DarkBlue : Color.LightBlue;
 
             string className = Class.Text;
             if (_values.Any() && _values.All(x => x.Class == null || x.Class == className))
@@ -473,7 +478,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             // Changing class: remove all the 'removed' properties, reset the rest to normal
             string className = Class.Text;
             GameDataObject cls = Document.GameData.Classes.FirstOrDefault(x => x.Name == className);
-            Class.BackColor = Color.LightGreen;
+            Class.BackColor = General.EnableDarkMode ? Color.DarkGreen : Color.LightGreen;
             _values.RemoveAll(x => x.IsRemoved);
             foreach (TableValue tv in _values)
             {
@@ -506,7 +511,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             Class.Text = _prevClass;
             string className = Class.Text;
             GameDataObject cls = Document.GameData.Classes.FirstOrDefault(x => x.Name == className);
-            Class.BackColor = Color.White;
+            Class.BackColor = _dark.OScolors.Control;
             _values.RemoveAll(x => x.IsAdded);
             foreach (TableValue tv in _values)
             {
@@ -541,12 +546,12 @@ namespace CBRE.Editor.UI.ObjectProperties
             {
                 string dt = SmartEditButton.Checked ? val.DisplayText(Document.GameData) : val.OriginalKey;
                 string dv = SmartEditButton.Checked ? val.DisplayValue(Document.GameData) : val.Value;
-                li = new ListViewItem(dt) { Tag = val.OriginalKey, BackColor = val.GetColour() };
+                li = new ListViewItem(dt) { Tag = val.OriginalKey, BackColor = val.GetColour(KeyValuesList) };
                 KeyValuesList.Items.Add(li).SubItems.Add(dv);
             }
             else
             {
-                li.BackColor = val.GetColour();
+                li.BackColor = val.GetColour(KeyValuesList);
                 li.SubItems[1].Text = SmartEditButton.Checked ? val.DisplayValue(Document.GameData) : val.Value;
             }
             if (propertyname == "angles" && propertyvalue != Angles.GetAnglePropertyString())
@@ -567,7 +572,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             ListViewItem li = KeyValuesList.Items.OfType<ListViewItem>().FirstOrDefault(x => ((string)x.Tag) == oldName);
             if (li != null)
             {
-                li.BackColor = val.GetColour();
+                li.BackColor = val.GetColour(KeyValuesList);
                 li.SubItems[0].Text = SmartEditButton.Checked ? val.DisplayText(Document.GameData) : val.NewKey;
             }
         }

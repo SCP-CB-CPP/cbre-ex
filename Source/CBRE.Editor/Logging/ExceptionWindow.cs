@@ -5,10 +5,11 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using CBRE.Common.Mediator;
 using CBRE.UI.Native;
+using DarkModeForms;
 
 namespace CBRE.Editor.Logging
 {
-    public partial class ExceptionWindow : Form
+    public partial class ExceptionWindow : DarkModeForm
     {
         public ExceptionInfo ExceptionInfo { get; set; }
         private string LogText { get; set; }

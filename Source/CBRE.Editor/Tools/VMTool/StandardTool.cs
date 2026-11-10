@@ -6,6 +6,7 @@ using CBRE.UI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.Tools.VMTool
 {
@@ -254,7 +255,7 @@ Select two (non-adjacent) points on a face to enable splitting.";
 
         private bool ConfirmMerge()
         {
-            return MessageBox.Show("Merge vertices?", "Overlapping vertices detected", MessageBoxButtons.YesNo) == DialogResult.Yes;
+            return DarkMessageBox.Show("Merge vertices?", "Overlapping vertices detected", MessageBoxButtons.YesNo) == DialogResult.Yes;
         }
 
         private void CheckMergedVertices()

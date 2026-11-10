@@ -4,10 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI.FileSystem
 {
-    public partial class FileSystemBrowserDialog : Form
+    public partial class FileSystemBrowserDialog : DarkModeForm
     {
         #region Events
         public delegate void ConfirmedButtonEventHandler(object sender, IEnumerable<IFile> selection);

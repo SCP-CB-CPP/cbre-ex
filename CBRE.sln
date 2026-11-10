@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CBRE.SMFConverter", "Source
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBRE.Packages", "Source\CBRE.Packages\CBRE.Packages.csproj", "{BB1AF818-8CCA-4BC8-A4A8-B7A0627B68DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CBRE.Theme", "Source\CBRE.Theme\CBRE.Theme.csproj", "{68362392-FF19-4560-B159-54ADF7BA7B26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{BB1AF818-8CCA-4BC8-A4A8-B7A0627B68DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB1AF818-8CCA-4BC8-A4A8-B7A0627B68DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB1AF818-8CCA-4BC8-A4A8-B7A0627B68DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68362392-FF19-4560-B159-54ADF7BA7B26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68362392-FF19-4560-B159-54ADF7BA7B26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68362392-FF19-4560-B159-54ADF7BA7B26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68362392-FF19-4560-B159-54ADF7BA7B26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using CBRE.UI.Native;
+using DarkModeForms;
 using Microsoft.WindowsAPICodePack.Taskbar;
 using Steamworks;
 using Steamworks.Data;
@@ -17,7 +18,7 @@ using Color = System.Drawing.Color;
 
 namespace CBRE.Editor.Compiling
 {
-    public partial class ExportForm : Form
+    public partial class ExportForm : DarkModeForm
     {
         public Document Document;
         
@@ -34,11 +35,12 @@ namespace CBRE.Editor.Compiling
         public ExportForm()
         {
             InitializeComponent();
+            DarkModeCS.ExcludeFromProcessing(ambientColorBox);
         }
 
         private DialogResult ShowPerformanceWarning()
         {
-            DialogResult result = MessageBox.Show("Baking model shadows will SEVERELY impact lightmapping performance, " +
+            DialogResult result = DarkMessageBox.Show("Baking model shadows will SEVERELY impact lightmapping performance, " +
                                                   "especially if there are lots of models in your room.\n" +
                                                   "It's recommended to leave it off unless you're exporting the room.\n\n" +
                                                   "Are you sure you want to continue?\n\n" +

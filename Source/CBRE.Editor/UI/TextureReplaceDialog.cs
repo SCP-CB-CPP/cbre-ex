@@ -10,10 +10,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI
 {
-    public partial class TextureReplaceDialog : Form
+    public partial class TextureReplaceDialog : DarkModeForm
     {
         private Document _document;
 

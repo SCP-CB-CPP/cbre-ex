@@ -6,10 +6,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.Visgroups
 {
-    public partial class VisgroupEditForm : Form
+    public partial class VisgroupEditForm : DarkModeForm
     {
         private readonly List<Visgroup> _visgroups;
         private readonly List<Visgroup> _deleted;

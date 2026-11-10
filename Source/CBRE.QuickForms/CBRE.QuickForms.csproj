@@ -22,4 +22,7 @@
       <SubType>Form</SubType>
     </Compile>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CBRE.Theme\CBRE.Theme.csproj" />
+  </ItemGroup>
 </Project>

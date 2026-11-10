@@ -100,11 +100,31 @@ namespace CBRE.Editor.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon CBRE_light {
+            get {
+                object obj = ResourceManager.GetObject("CBRE_light", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap CBRE_Icon {
             get {
                 object obj = ResourceManager.GetObject("CBRE_Icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap CBRE_Icon_Light {
+            get {
+                object obj = ResourceManager.GetObject("CBRE_Icon_Light", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

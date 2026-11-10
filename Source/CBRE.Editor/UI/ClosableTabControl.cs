@@ -1,10 +1,11 @@
 ﻿using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI
 {
-    public class ClosableTabControl : TabControl
+    public class ClosableTabControl : FlatTabControl
     {
         public delegate void RequestCloseEventHandler(object sender, int index);
 
@@ -26,15 +27,12 @@ namespace CBRE.Editor.UI
             SetStyle(ControlStyles.ResizeRedraw, true);
             SetStyle(ControlStyles.SupportsTransparentBackColor, true);
 
+            Appearance = TabAppearance.Normal;
+            SizeMode = TabSizeMode.Normal;
+            ShowTabCloseButton = false;
+
             ImageList = new ImageList();
             ImageList.Images.Add(new Bitmap(8, 8));
-
-            TabPages.Add("Test 1");
-            TabPages.Add("Test 2");
-            TabPages.Add("Test 3");
-            TabPages.Add("Test 4");
-            TabPages.Add("Test 5");
-            TabPages.Add("Test 6");
         }
 
         protected override void OnPaint(PaintEventArgs e)

@@ -4,10 +4,11 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI.Layout
 {
-    public partial class LayoutSettings : Form
+    public partial class LayoutSettings : DarkModeForm
     {
         private readonly static TableSplitConfiguration[] Presets;
         private readonly static Bitmap[] PresetPreviews;

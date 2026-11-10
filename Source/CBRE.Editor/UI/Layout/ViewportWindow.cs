@@ -1,8 +1,9 @@
 ﻿using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI.Layout
 {
-    public partial class ViewportWindow : Form
+    public partial class ViewportWindow : DarkModeForm
     {
         public ViewportWindow(TableSplitConfiguration configuration)
         {

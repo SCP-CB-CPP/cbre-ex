@@ -538,7 +538,9 @@
     <Content Include="Resources\Arrow_Down.png" />
     <Content Include="Resources\Arrow_Up.png" />
     <None Include="Resources\CBRE_Icon.png" />
+    <None Include="Resources\CBRE_Icon_Light.png" />
     <None Include="Resources\CBRE.ico" />
+    <None Include="Resources\CBRE_light.ico" />
     <None Include="Resources\Options.ico" />
     <None Include="Resources\Lightmapper.ico" />
     <Content Include="Resources\Menu_GitHub.png" />
@@ -581,6 +583,7 @@
     <ProjectReference Include="..\CBRE.QuickForms\CBRE.QuickForms.csproj" />
     <ProjectReference Include="..\CBRE.Settings\CBRE.Settings.csproj" />
     <ProjectReference Include="..\CBRE.SMFConverter\CBRE.SMFConverter.csproj" />
+    <ProjectReference Include="..\CBRE.Theme\CBRE.Theme.csproj" />
     <ProjectReference Include="..\CBRE.UI\CBRE.UI.csproj" />
   </ItemGroup>
   <ItemGroup>

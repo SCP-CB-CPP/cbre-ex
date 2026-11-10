@@ -5,10 +5,11 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using CBRE.UI.Native;
+using DarkModeForms;
 
 namespace CBRE.Editor.Logging
 {
-    public partial class EntityErrorWindow : Form
+    public partial class EntityErrorWindow : DarkModeForm
     {
         public EntityErrorWindow(List<string> Errors)
         {

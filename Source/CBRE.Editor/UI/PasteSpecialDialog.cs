@@ -2,10 +2,11 @@
 using CBRE.Editor.Enums;
 using System;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI
 {
-    public partial class PasteSpecialDialog : Form
+    public partial class PasteSpecialDialog : DarkModeForm
     {
         private readonly Box _source;
 

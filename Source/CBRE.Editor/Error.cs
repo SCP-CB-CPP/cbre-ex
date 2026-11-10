@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor
 {
@@ -10,7 +11,7 @@ namespace CBRE.Editor
         /// </summary>
         public static void Critical(string message)
         {
-            MessageBox.Show("A critical error has occurred:\n\n" + message + "\n\nThe application will now close.", "Critical Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            DarkMessageBox.Show("A critical error has occurred:\n\n" + message + "\n\nThe application will now close.", "Critical Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Application.Exit();
         }
 
@@ -19,7 +20,7 @@ namespace CBRE.Editor
         /// </summary>
         public static void Warning(string message)
         {
-            MessageBox.Show("An error has occurred:\n\n" + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            DarkMessageBox.Show("An error has occurred:\n\n" + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         /// <summary>

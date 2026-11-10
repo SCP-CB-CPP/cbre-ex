@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 using Quaternion = CBRE.DataStructures.Geometric.Quaternion;
 
 namespace CBRE.Editor.Documents
@@ -219,7 +220,7 @@ namespace CBRE.Editor.Documents
         {
             if (_document.History.TotalActionsSinceLastSave > 0)
             {
-                DialogResult result = MessageBox.Show("Would you like to save your changes to this map?", "Changes Detected", MessageBoxButtons.YesNoCancel);
+                DialogResult result = DarkMessageBox.Show("Would you like to save your changes to this map?", "Changes Detected", MessageBoxButtons.YesNoCancel);
                 if (result == DialogResult.Cancel) return;
                 if (result == DialogResult.Yes) FileSave();
             }
@@ -417,7 +418,7 @@ namespace CBRE.Editor.Documents
 
             if (solids.Count > 1)
             {
-                if (MessageBox.Show("This will hollow out every selected solid, are you sure?", "Multiple solids selected", MessageBoxButtons.YesNo) != DialogResult.Yes)
+                if (DarkMessageBox.Show("This will hollow out every selected solid, are you sure?", "Multiple solids selected", MessageBoxButtons.YesNo) != DialogResult.Yes)
                 {
                     return;
                 }
@@ -430,7 +431,7 @@ namespace CBRE.Editor.Documents
             {
                 if (qf.ShowDialog() == DialogResult.Cancel) return;
                 width = qf.Decimal("Wall Width");
-                if (width == 0) MessageBox.Show("Please select a non-zero value.");
+                if (width == 0) DarkMessageBox.Show("Please select a non-zero value.");
             } while (width == 0);
 
             _document.PerformAction("Make objects hollow", new MakeHollow(solids, width));
@@ -512,7 +513,7 @@ namespace CBRE.Editor.Documents
                       ?? _document.GameData.Classes.FirstOrDefault(x => x.ClassType == ClassType.Solid);
                 if (entity == null)
                 {
-                    MessageBox.Show("No solid entities found. Please make sure your FGDs are configured correctly.", "No entities found!");
+                    DarkMessageBox.Show("No solid entities found. Please make sure your FGDs are configured correctly.", "No entities found!");
                     return;
                 }
                 existing = new Entity(_document.Map.IDGenerator.GetNextObjectID())
@@ -901,7 +902,7 @@ namespace CBRE.Editor.Documents
             IEnumerable<long> selectedIds = _document.Selection.GetSelectedObjects().Select(x => x.ID);
             string idString = String.Join(", ", selectedIds);
 
-            MessageBox.Show("Selected Object IDs: " + idString);
+            DarkMessageBox.Show("Selected Object IDs: " + idString);
         }
 
         public void ShowMapInformation()
@@ -1040,14 +1041,14 @@ namespace CBRE.Editor.Documents
             if (_document.Selection.InFaceSelection)
             {
                 _document.PerformAction("Select Faces by Texture", new ChangeFaceSelection(matchingFaces, _document.Selection.GetSelectedFaces()));
-                MessageBox.Show(fc + " face" + (fc == 1 ? "" : "s") + " selected.");
+                DarkMessageBox.Show(fc + " face" + (fc == 1 ? "" : "s") + " selected.");
             }
             else
             {
                 List<Solid> objects = matchingFaces.Select(x => x.Parent).Distinct().ToList();
                 _document.PerformAction("Select Objects by Texture", new ChangeSelection(objects, _document.Selection.GetSelectedObjects()));
                 int oc = objects.Count;
-                MessageBox.Show(fc + " face" + (fc == 1 ? "" : "s") + " found, " + oc + " object" + (oc == 1 ? "" : "s") + " selected.");
+                DarkMessageBox.Show(fc + " face" + (fc == 1 ? "" : "s") + " found, " + oc + " object" + (oc == 1 ? "" : "s") + " selected.");
             }
         }
     }

@@ -9,10 +9,11 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI
 {
-    public partial class TextureBrowser : Form
+    public partial class TextureBrowser : DarkModeForm
     {
         public TextureBrowser()
         {

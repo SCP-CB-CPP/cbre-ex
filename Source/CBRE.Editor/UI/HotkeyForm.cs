@@ -1,9 +1,10 @@
 ﻿using CBRE.UI;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI
 {
-    public class HotkeyForm : Form
+    public class HotkeyForm : DarkModeForm
     {
         public bool PreventSimpleHotkeyPassthrough { get; set; }
 

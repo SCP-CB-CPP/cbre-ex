@@ -4,10 +4,11 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI
 {
-    public partial class MapInformationDialog : Form
+    public partial class MapInformationDialog : DarkModeForm
     {
         public MapInformationDialog(Document document)
         {

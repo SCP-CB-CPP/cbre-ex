@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
+using CBRE.Settings;
 using Property = CBRE.DataStructures.MapObjects.Property;
 
 namespace CBRE.Editor.UI.ObjectProperties
@@ -17,12 +19,12 @@ namespace CBRE.Editor.UI.ObjectProperties
         public bool IsAdded { get; set; }
         public bool IsRemoved { get; set; }
 
-        public Color GetColour()
+        public Color GetColour(Control control)
         {
-            if (IsAdded) return Color.LightBlue;
-            if (IsRemoved) return Color.LightPink;
-            if (IsModified) return Color.LightGreen;
-            return Color.Transparent;
+            if (IsAdded) return General.EnableDarkMode ? Color.DarkBlue : Color.LightBlue;
+            if (IsRemoved) return General.EnableDarkMode ? Color.DarkRed : Color.LightPink;
+            if (IsModified) return General.EnableDarkMode ? Color.DarkGreen : Color.LightGreen;
+            return control.BackColor;
         }
 
         public string DisplayText(GameData gd)

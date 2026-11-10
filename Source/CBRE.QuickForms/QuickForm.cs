@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.QuickForms
 {
@@ -10,7 +11,7 @@ namespace CBRE.QuickForms
     /// QuickForms is input dialogs for the lazy.
     /// It allows quick composition of disposable forms.
     /// </summary>
-    public sealed class QuickForm : Form
+    public sealed class QuickForm : DarkModeForm
     {
         /// <summary>
         /// Change the standard height of each item in the form.

@@ -28,6 +28,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using CBRE.Editor.Logging;
+using DarkModeForms;
 using Path = System.IO.Path;
 
 namespace CBRE.Editor.Documents
@@ -182,7 +183,7 @@ namespace CBRE.Editor.Documents
             
             if (realUnknownEntitiesFound)
             {
-                MessageBox.Show("CBRE-EX has found some unknown entities in this map file.\n" +
+                DarkMessageBox.Show("CBRE-EX has found some unknown entities in this map file.\n" +
                                 "They will not be exported, and they will appear as a small colored cube in the 3D viewport.\n" +
                                 "Please, ask the creator of this map for the appropriate JSON files for this map.", 
                     "Warning!", 

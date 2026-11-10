@@ -1,4 +1,7 @@
-﻿namespace CBRE.Editor.UI
+﻿using CBRE.Editor.Properties;
+using CBRE.Settings;
+
+namespace CBRE.Editor.UI
 {
     partial class AboutDialog
     {
@@ -48,7 +51,7 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::CBRE.Editor.Properties.Resources.CBRE_Icon;
+            this.pictureBox1.Image = General.EnableDarkMode ? global::CBRE.Editor.Properties.Resources.CBRE_Icon : global::CBRE.Editor.Properties.Resources.CBRE_Icon_Light;
             this.pictureBox1.Location = new System.Drawing.Point(12, 12);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(553, 235);

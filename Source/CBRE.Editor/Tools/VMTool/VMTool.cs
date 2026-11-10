@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 using Matrix = CBRE.Graphics.Helpers.Matrix;
 using Select = CBRE.Settings.Select;
 using View = CBRE.Settings.View;
@@ -784,7 +785,7 @@ namespace CBRE.Editor.Tools.VMTool
             {
                 case HotkeysMediator.HistoryUndo:
                 case HotkeysMediator.HistoryRedo:
-                    MessageBox.Show("Please exit the VM tool to undo any changes.");
+                    DarkMessageBox.Show("Please exit the VM tool to undo any changes.");
                     return HotkeyInterceptResult.Abort;
                 case HotkeysMediator.OperationsPaste:
                 case HotkeysMediator.OperationsPasteSpecial:

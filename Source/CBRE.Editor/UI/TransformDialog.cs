@@ -2,10 +2,11 @@
 using CBRE.Editor.Enums;
 using System;
 using System.Windows.Forms;
+using DarkModeForms;
 
 namespace CBRE.Editor.UI
 {
-    public partial class TransformDialog : Form
+    public partial class TransformDialog : DarkModeForm
     {
         private readonly Box _source;
         private decimal zeroValue = 0;
@@ -92,7 +93,7 @@ namespace CBRE.Editor.UI
         {
             if (scale.Checked && (ValueX.Value == 0 || ValueY.Value == 0 || ValueZ.Value == 0))
             {
-                MessageBox.Show("Please enter a non-zero value for all axes when scaling.");
+                DarkMessageBox.Show("Please enter a non-zero value for all axes when scaling.");
                 DialogResult = DialogResult.None;
             }
         }
