@@ -93,7 +93,7 @@ namespace CBRE.Editor.Compiling
 
         private void export_Click(object sender, EventArgs e)
         {
-            if (LightmapConfig.BakeModelShadows && CBRE.Settings.Exporting.ShowModelBakingWarning && CBRE.Settings.Exporting.ForceLightmapOnExport)
+            if (LightmapConfig.BakeModelShadows && CBRE.Settings.Exporting.ShowModelBakingWarning && LightmapConfig.LightmapOnExport)
             {
                 DialogResult result = ShowPerformanceWarning();
 
@@ -247,6 +247,9 @@ namespace CBRE.Editor.Compiling
 
                 modelBakeYes.Enabled = !enabled;
                 modelBakeNo.Enabled = !enabled;
+                
+                renderLightmapsYes.Enabled = !enabled;
+                renderLightmapsNo.Enabled = !enabled;
 
                 render.Enabled = !enabled;
                 export.Enabled = !enabled;
@@ -387,6 +390,15 @@ namespace CBRE.Editor.Compiling
             {
                 modelBakeYes.Checked = true;
             }
+            
+            if (LightmapConfig.LightmapOnExport)
+            {
+                renderLightmapsYes.Checked = true;
+            }
+        }
+
+        private void renderLightmapsYes_CheckedChanged(object sender, EventArgs e) {
+            LightmapConfig.LightmapOnExport = renderLightmapsYes.Checked;
         }
     }
 }

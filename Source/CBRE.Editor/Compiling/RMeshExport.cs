@@ -40,7 +40,7 @@ namespace CBRE.Editor.Compiling
             filename = Path.GetFileNameWithoutExtension(filename) + ".rmesh";
             string lmPath = Path.GetFileNameWithoutExtension(filename) + "_lm";
             
-            if (Exporting.ForceLightmapOnExport) Lightmapper.Render(document, form, out _, out _);
+            if (LightmapConfig.LightmapOnExport) Lightmapper.Render(document, form, out _, out _);
 
             var entities = map.WorldSpawn.Find(x => x.ClassName != null)
                 .OfType<Entity>()

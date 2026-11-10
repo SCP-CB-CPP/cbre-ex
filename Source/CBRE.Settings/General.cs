@@ -1,4 +1,6 @@
-﻿namespace CBRE.Settings
+﻿using System.ComponentModel;
+
+namespace CBRE.Settings
 {
     public class General
     {
@@ -8,7 +10,7 @@
         static General()
         {
             EnableDiscordPresence = true;
-            EnableDarkMode = true;
+            EnableDarkMode = LicenseManager.UsageMode == LicenseUsageMode.Runtime;
         }
     }
 }

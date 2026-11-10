@@ -528,7 +528,6 @@ namespace CBRE.Editor.Settings
 
             AddHeading("Lightmapping");
             AddSetting(() => CBRE.Settings.Exporting.ShowModelBakingWarning, "Show model baking performance warning");
-            AddSetting(() => CBRE.Settings.Exporting.ForceLightmapOnExport, "Automatically render lightmap on export");
 
             AddHeading("Textures");
             AddSetting(() => CBRE.Settings.Select.ApplyTextureImmediately, "Apply texture immediately after browsing in the texture application tool");
