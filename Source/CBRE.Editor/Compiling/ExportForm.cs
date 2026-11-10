@@ -386,15 +386,11 @@ namespace CBRE.Editor.Compiling
 
             viewAfterCheckbox.Checked = LightmapConfig.ViewAfterExport;
 
-            if (LightmapConfig.BakeModelShadows)
-            {
-                modelBakeYes.Checked = true;
-            }
-            
-            if (LightmapConfig.LightmapOnExport)
-            {
-                renderLightmapsYes.Checked = true;
-            }
+            modelBakeYes.Checked = LightmapConfig.BakeModelShadows;
+            modelBakeNo.Checked = !LightmapConfig.BakeModelShadows;
+
+            renderLightmapsYes.Checked = LightmapConfig.LightmapOnExport;
+            renderLightmapsNo.Checked = !LightmapConfig.LightmapOnExport;
         }
 
         private void renderLightmapsYes_CheckedChanged(object sender, EventArgs e) {
