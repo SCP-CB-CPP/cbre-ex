@@ -41,6 +41,7 @@ namespace CBRE.Settings
 
             ViewAfterExport = false;
             BakeModelShadows = false;
+            LightmapOnExport = true;
         }
     }
 }

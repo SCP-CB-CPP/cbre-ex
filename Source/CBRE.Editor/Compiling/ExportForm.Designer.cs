@@ -237,20 +237,19 @@
             // renderLightmapsNo
             // 
             this.renderLightmapsNo.AutoSize = true;
-            this.renderLightmapsNo.Checked = true;
             this.renderLightmapsNo.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.renderLightmapsNo.Location = new System.Drawing.Point(48, 0);
             this.renderLightmapsNo.Margin = new System.Windows.Forms.Padding(3, 3, 3, 6);
             this.renderLightmapsNo.Name = "renderLightmapsNo";
             this.renderLightmapsNo.Size = new System.Drawing.Size(41, 19);
             this.renderLightmapsNo.TabIndex = 27;
-            this.renderLightmapsNo.TabStop = true;
             this.renderLightmapsNo.Text = "No";
             this.renderLightmapsNo.UseVisualStyleBackColor = true;
             // 
             // renderLightmapsYes
             // 
             this.renderLightmapsYes.AutoSize = true;
+            this.renderLightmapsYes.Checked = true;
             this.renderLightmapsYes.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.renderLightmapsYes.Location = new System.Drawing.Point(0, 0);
             this.renderLightmapsYes.Margin = new System.Windows.Forms.Padding(3, 3, 3, 6);
