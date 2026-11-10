@@ -91,6 +91,7 @@
       <Compile Include="FlatComboBox.cs" />
       <Compile Include="FlatTabControl.cs" />
       <Compile Include="Messenger.cs" />
+      <Compile Include="ThemeManager.cs" />
     </ItemGroup>
     <ItemGroup>
       <None Include="packages.config" />

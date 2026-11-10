@@ -346,7 +346,7 @@ namespace DarkModeForms
         public ComponentCollection Components { get; set; }
 
         /// <summary>Windows Colors. Can be customized.</summary>
-        public OSThemeColors OScolors { get; private set; }
+        public OSThemeColors OScolors { get; set; }
 
         #endregion Public Members
 
@@ -356,7 +356,8 @@ namespace DarkModeForms
         /// <param name="_Form">The Form to become Dark</param>
         /// <param name="_ColorizeIcons">[OPTIONAL] re-colorize all Icons in Toolbars and Menus.</param>
         /// <param name="_RoundedPanels">[OPTIONAL] make all Panels Borders Rounded</param>
-        public DarkModeCS(Form _Form, bool _ColorizeIcons = true, bool _RoundedPanels = false)
+        /// <param name="_OScolors">[OPTIONAL] custom OS theme colors</param>
+        public DarkModeCS(Form _Form, bool _ColorizeIcons = true, bool _RoundedPanels = false, OSThemeColors _OScolors = null)
         {
 
             //Sets the Properties:
@@ -364,6 +365,7 @@ namespace DarkModeForms
             Components = null;
             ColorizeIcons = _ColorizeIcons;
             RoundedPanels = _RoundedPanels;
+            OScolors = _OScolors ?? new();
             ApplyColorMode();
             if (originalWndProc == IntPtr.Zero)
             {
@@ -389,7 +391,6 @@ namespace DarkModeForms
             {
                 IsDarkMode = IsSystemDarkMode(); //<- Gets the current color mode from Windows
             }
-            OScolors = GetSystemColors(IsDarkMode ? 0 : 1);
 
         }
         private IntPtr CustomWndProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam)
@@ -1042,39 +1043,6 @@ namespace DarkModeForms
             {
                 return Color.CadetBlue;
             }
-        }
-
-        /// <summary>Returns Windows's System Colors for UI components following Google Material Design concepts.</summary>
-        /// <returns>List of Colors:  Background, OnBackground, Surface, OnSurface, Primary, OnPrimary, Secondary, OnSecondary</returns>
-        public static OSThemeColors GetSystemColors(int ColorMode = 0) //<- O: DarkMode, 1: LightMode
-        {
-            OSThemeColors _ret = new OSThemeColors();
-
-            if (ColorMode <= 0)
-            {
-                _ret.Background = Color.FromArgb(32, 32, 32);   //<- Negro Claro
-                _ret.BackgroundDark = Color.FromArgb(18, 18, 18);
-                _ret.BackgroundLight = ControlPaint.Light(_ret.Background);
-
-                _ret.Surface = Color.FromArgb(43, 43, 43);      //<- Gris Oscuro
-                _ret.SurfaceLight = Color.FromArgb(50, 50, 50);
-                _ret.SurfaceDark = Color.FromArgb(29, 29, 29);
-
-                _ret.TextActive = Color.White;
-                _ret.TextInactive = Color.FromArgb(176, 176, 176);  //<- Blanco Palido
-                _ret.TextInAccent = GetReadableColor(_ret.Accent);
-
-                _ret.Control = Color.FromArgb(55, 55, 55);       //<- Gris Oscuro
-                _ret.ControlDark = ControlPaint.Dark(_ret.Control);
-                _ret.ControlLight = Color.FromArgb(67, 67, 67);
-
-                _ret.Primary = Color.FromArgb(3, 218, 198);   //<- Verde Pastel
-                _ret.Secondary = Color.MediumSlateBlue;         //<- Magenta Claro
-
-
-            }
-
-            return _ret;
         }
 
         /// <summary>Apply Round Corners to the indicated Control or Form.</summary>

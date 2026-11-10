@@ -510,7 +510,7 @@ namespace CBRE.Editor.Settings
         {
             AddHeading("General Settings");
             AddSetting(() => CBRE.Settings.General.EnableDiscordPresence, "Enable Discord rich presence");
-            AddSetting(() => CBRE.Settings.General.EnableDarkMode, "Enable dark mode (requires restart)");
+            AddThemeDropdown();
 
             AddHeading("Object Creation");
             AddSetting(() => CBRE.Settings.Select.SwitchToSelectAfterCreation, "Switch to selection tool after brush creation");
@@ -1195,6 +1195,43 @@ namespace CBRE.Editor.Settings
         {
             int r = dataGridView.Rows.Add("X", dir, "...");
             return r;
+        }
+
+        private ComboBox AddThemeDropdown() {
+            PropertyInfo property = typeof(General).GetProperty("Theme");
+            ComboBox combo = new ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Width = 300
+            };
+            foreach (var val in ThemeManager.AvailableThemes)
+            {
+                combo.Items.Add(val);
+            }
+            combo.SelectedIndex = string.IsNullOrEmpty(General.Theme)
+                ? 0
+                : ThemeManager.AvailableThemes.TakeWhile(x => x != General.Theme).Count();
+            combo.SelectedIndexChanged += (s, e)
+                => property.SetValue(null, combo.SelectedIndex == 0
+                    ? null
+                    : ThemeManager.AvailableThemes[combo.SelectedIndex]);
+            Label label = new Label
+            {
+                AutoSize = true,
+                Text = "Theme (requires restart)",
+                Padding = new Padding(0, 5, 0, 5)
+            };
+            FlowLayoutPanel panel = new FlowLayoutPanel
+            {
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                AutoSize = true
+            };
+            panel.Controls.Add(label);
+            panel.Controls.Add(combo);
+            flowLayoutPanel1.Controls.Add(panel);
+
+            return combo;
         }
     }
 }

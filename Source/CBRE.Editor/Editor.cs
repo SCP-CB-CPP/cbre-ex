@@ -54,10 +54,14 @@ namespace CBRE.Editor
 
 		public Editor()
 		{
+			SettingsManager.Read();
+			ThemeManager.Initialize();
+			
 			if (General.EnableDarkMode) {
 				_dark = new(this) {
 					ColorizeIcons = false,
 					ColorMode = DarkModeCS.DisplayMode.DarkMode,
+					OScolors = ThemeManager.Colors,
 				};	
 			}
 			
@@ -128,9 +132,7 @@ namespace CBRE.Editor
 		private void EditorLoad(object sender, EventArgs e)
 		{
 			FileTypeRegistration.RegisterFileTypes();
-
-			SettingsManager.Read();
-
+			
 			if (TaskbarManager.IsPlatformSupported)
 			{
 				TaskbarManager.Instance.ApplicationId = FileTypeRegistration.ProgramId;

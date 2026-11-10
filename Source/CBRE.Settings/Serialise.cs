@@ -65,7 +65,7 @@ namespace CBRE.Settings
 
         public static void DeserialiseSettings(Dictionary<string, string> dict)
         {
-            foreach (PropertyInfo prop in GetProperties().Where(prop => dict.ContainsKey(prop.Name)))
+            foreach (PropertyInfo prop in GetProperties().Where(prop => dict.ContainsKey(prop.Name) && prop.CanWrite))
             {
                 prop.SetValue(null, FromString(prop.PropertyType, dict[prop.Name]), null);
             }

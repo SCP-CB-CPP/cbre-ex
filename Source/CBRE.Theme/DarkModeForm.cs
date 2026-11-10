@@ -10,7 +10,8 @@ public class DarkModeForm : Form {
         if (General.EnableDarkMode) {
             _dark = new(this) {
                 ColorizeIcons = false,
-                ColorMode = DarkModeCS.DisplayMode.DarkMode
+                ColorMode = DarkModeCS.DisplayMode.DarkMode,
+                OScolors = ThemeManager.Colors,
             };
         }
     }
