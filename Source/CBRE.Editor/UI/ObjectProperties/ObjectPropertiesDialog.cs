@@ -128,7 +128,7 @@ namespace CBRE.Editor.UI.ObjectProperties
                 EntityData entityData = entity.GetEntityData().Clone();
                 bool changed = false;
                 // Updated class
-                if (Class.BackColor == (General.EnableDarkMode ? Color.DarkGreen : Color.LightGreen))
+                if (Class.BackColor == (ThemeManager.IsDarkMode ? Color.DarkGreen : Color.LightGreen))
                 {
                     entityData.Name = Class.Text;
                     entity.ClassName = Class.Text;
@@ -443,7 +443,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             if (_populating) return;
             KeyValuesList.SelectedItems.Clear();
             _changingClass = true;
-            Class.BackColor = General.EnableDarkMode ? Color.DarkBlue : Color.LightBlue;
+            Class.BackColor = ThemeManager.IsDarkMode ? Color.DarkBlue : Color.LightBlue;
 
             string className = Class.Text;
             if (_values.Any() && _values.All(x => x.Class == null || x.Class == className))
@@ -478,7 +478,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             // Changing class: remove all the 'removed' properties, reset the rest to normal
             string className = Class.Text;
             GameDataObject cls = Document.GameData.Classes.FirstOrDefault(x => x.Name == className);
-            Class.BackColor = General.EnableDarkMode ? Color.DarkGreen : Color.LightGreen;
+            Class.BackColor = ThemeManager.IsDarkMode ? Color.DarkGreen : Color.LightGreen;
             _values.RemoveAll(x => x.IsRemoved);
             foreach (TableValue tv in _values)
             {

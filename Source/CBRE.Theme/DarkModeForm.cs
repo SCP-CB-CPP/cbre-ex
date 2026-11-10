@@ -7,7 +7,7 @@ public class DarkModeForm : Form {
     protected readonly DarkModeCS _dark;
     
     protected DarkModeForm() {
-        if (General.EnableDarkMode) {
+        if (ThemeManager.IsDarkMode) {
             _dark = new(this) {
                 ColorizeIcons = false,
                 ColorMode = DarkModeCS.DisplayMode.DarkMode,

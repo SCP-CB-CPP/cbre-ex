@@ -9,6 +9,7 @@ namespace DarkModeForms;
 
 public static class ThemeManager {
     public static OSThemeColors? Colors { get; private set; }
+    public static bool IsDarkMode => Colors != null;
 
     public static IReadOnlyList<string> AvailableThemes { get; private set; }
     

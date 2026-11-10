@@ -43,7 +43,6 @@ namespace CBRE.Editor
 	{
 		private JumpList _jumpList;
 		private DiscordManager _DiscordManager;
-		private DarkModeCS _dark;
 		
 		public static Editor Instance { get; private set; }
 
@@ -54,19 +53,8 @@ namespace CBRE.Editor
 
 		public Editor()
 		{
-			SettingsManager.Read();
-			ThemeManager.Initialize();
-			
-			if (General.EnableDarkMode) {
-				_dark = new(this) {
-					ColorizeIcons = false,
-					ColorMode = DarkModeCS.DisplayMode.DarkMode,
-					OScolors = ThemeManager.Colors,
-				};	
-			}
-			
 			HandleCreated += (sender, args)
-				=> Icon = General.EnableDarkMode ? Properties.Resources.CBRE : Properties.Resources.CBRE_light;
+				=> Icon = ThemeManager.IsDarkMode ? Properties.Resources.CBRE : Properties.Resources.CBRE_light;
 
 			PreventSimpleHotkeyPassthrough = false;
 			InitializeComponent();

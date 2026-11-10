@@ -5,12 +5,12 @@ namespace DarkModeForms;
 
 public static class DarkMessageBox {
     public static DialogResult Show(string text)
-        => General.EnableDarkMode
+        => ThemeManager.IsDarkMode
             ? Messenger.MessageBox(text)
             : MessageBox.Show(text);
 
     public static DialogResult Show(string text, string caption, MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.None)
-        => General.EnableDarkMode
+        => ThemeManager.IsDarkMode
             ? Messenger.MessageBox(text, caption, buttons, icon)
             : MessageBox.Show(text, caption, buttons, icon);
 }

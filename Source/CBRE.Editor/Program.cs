@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using System.Windows.Forms;
+using CBRE.Settings;
+using DarkModeForms;
 
 namespace CBRE.Editor
 {
@@ -19,6 +21,8 @@ namespace CBRE.Editor
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 			RegisterHandlers();
+			SettingsManager.Read();
+			ThemeManager.Initialize();
 			SingleInstance.Start(typeof(Editor));
 		}
 

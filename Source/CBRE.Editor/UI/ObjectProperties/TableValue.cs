@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using CBRE.Settings;
+using DarkModeForms;
 using Property = CBRE.DataStructures.MapObjects.Property;
 
 namespace CBRE.Editor.UI.ObjectProperties
@@ -21,9 +22,9 @@ namespace CBRE.Editor.UI.ObjectProperties
 
         public Color GetColour(Control control)
         {
-            if (IsAdded) return General.EnableDarkMode ? Color.DarkBlue : Color.LightBlue;
-            if (IsRemoved) return General.EnableDarkMode ? Color.DarkRed : Color.LightPink;
-            if (IsModified) return General.EnableDarkMode ? Color.DarkGreen : Color.LightGreen;
+            if (IsAdded) return ThemeManager.IsDarkMode ? Color.DarkBlue : Color.LightBlue;
+            if (IsRemoved) return ThemeManager.IsDarkMode ? Color.DarkRed : Color.LightPink;
+            if (IsModified) return ThemeManager.IsDarkMode ? Color.DarkGreen : Color.LightGreen;
             return control.BackColor;
         }
 

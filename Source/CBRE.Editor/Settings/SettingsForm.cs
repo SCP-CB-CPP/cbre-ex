@@ -1208,9 +1208,15 @@ namespace CBRE.Editor.Settings
             {
                 combo.Items.Add(val);
             }
-            combo.SelectedIndex = string.IsNullOrEmpty(General.Theme)
-                ? 0
-                : ThemeManager.AvailableThemes.TakeWhile(x => x != General.Theme).Count();
+            combo.SelectedIndex = GetIndex(General.Theme);
+            
+            int GetIndex(string theme) {
+                if (string.IsNullOrEmpty(theme)) return 0;
+                var count = ThemeManager.AvailableThemes.TakeWhile(x => x != theme).Count();
+                if (count == ThemeManager.AvailableThemes.Count) return 0;
+                return count;
+            }
+
             combo.SelectedIndexChanged += (s, e)
                 => property.SetValue(null, combo.SelectedIndex == 0
                     ? null

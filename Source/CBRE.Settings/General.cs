@@ -6,7 +6,6 @@ namespace CBRE.Settings
     {
         public static bool EnableDiscordPresence { get; set; }
         public static string? Theme { get; set; }
-        public static bool EnableDarkMode => !string.IsNullOrEmpty(Theme);
 
         static General()
         {
