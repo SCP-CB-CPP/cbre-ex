@@ -10,6 +10,7 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CBRE.Editor.Documents;
 using GL = OpenTK.Graphics.OpenGL.GL;
 
 namespace CBRE.Editor.Rendering.Arrays
@@ -215,7 +216,6 @@ namespace CBRE.Editor.Rendering.Arrays
             if (IsNoColl(face)) {
                 a /= 2;
             }
-            List<Vertex> lmed = face.GetIndexedVertices().Where(v => v.LMU != 0).ToList();
             return face.GetIndexedVertices().Select(vert => new MapObjectVertex
             {
                 Position = new Vector3((float)vert.Location.DX, (float)vert.Location.DY, (float)vert.Location.DZ),
@@ -227,6 +227,7 @@ namespace CBRE.Editor.Rendering.Arrays
             });
         }
         
-        private static bool IsNoColl(Face face) => face.Parent.Parent?.ClassName == "nocoll";
+        private static bool IsNoColl(Face face) => face.Parent.Parent?.ClassName == "nocoll"
+                                                   && !(DocumentManager.CurrentDocument?.Map.HideToolTextures ?? false);
     }
 }
