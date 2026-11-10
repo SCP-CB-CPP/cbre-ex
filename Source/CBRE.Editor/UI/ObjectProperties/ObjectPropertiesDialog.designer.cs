@@ -220,6 +220,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             // 
             this.SmartEditButton.Appearance = System.Windows.Forms.Appearance.Button;
             this.SmartEditButton.AutoSize = true;
+			this.SmartEditButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.SmartEditButton.Checked = true;
             this.SmartEditButton.CheckState = System.Windows.Forms.CheckState.Checked;
             this.SmartEditButton.Location = new System.Drawing.Point(395, 6);
@@ -227,6 +228,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             this.SmartEditButton.Size = new System.Drawing.Size(71, 25);
             this.SmartEditButton.TabIndex = 8;
             this.SmartEditButton.Text = "Smart Edit";
+			this.SmartEditButton.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.SmartEditButton.UseVisualStyleBackColor = true;
             this.SmartEditButton.CheckedChanged += new System.EventHandler(this.SmartEditToggled);
             // 
