@@ -4,8 +4,8 @@ namespace CBRE.Settings
 {
     public class General
     {
-        public static bool EnableDiscordPresence { get; set; }
         public static string? Theme { get; set; }
+        public static bool EnableDiscordPresence { get; set; }
 
         static General()
         {

@@ -114,7 +114,7 @@ namespace CBRE.Editor.UI.ObjectProperties
                 Document.PerformAction(actionText, ac);
             }
 
-            Class.BackColor = _dark.OScolors.Control;
+            Class.BackColor = ThemeManager.Colors.Control;
         }
 
         private EditEntityData GetEditEntityDataAction()
@@ -511,7 +511,7 @@ namespace CBRE.Editor.UI.ObjectProperties
             Class.Text = _prevClass;
             string className = Class.Text;
             GameDataObject cls = Document.GameData.Classes.FirstOrDefault(x => x.Name == className);
-            Class.BackColor = _dark.OScolors.Control;
+            Class.BackColor = ThemeManager.Colors.Control;
             _values.RemoveAll(x => x.IsAdded);
             foreach (TableValue tv in _values)
             {

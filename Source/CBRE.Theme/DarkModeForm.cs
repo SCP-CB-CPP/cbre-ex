@@ -4,7 +4,7 @@ using CBRE.Settings;
 namespace DarkModeForms;
 
 public class DarkModeForm : Form {
-    protected readonly DarkModeCS _dark;
+    private readonly DarkModeCS _dark;
     
     protected DarkModeForm() {
         if (ThemeManager.IsDarkMode) {
