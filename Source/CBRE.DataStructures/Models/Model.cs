@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Runtime.InteropServices;
+using CBRE.DataStructures.Models.LightInfo;
 
 namespace CBRE.DataStructures.Models
 {
@@ -15,6 +16,7 @@ namespace CBRE.DataStructures.Models
         public List<BodyPart> BodyParts { get; private set; }
         public List<Animation> Animations { get; private set; }
         public List<Texture> Textures { get; set; }
+        public IReadOnlyList<MeshLightInfo> StubLightInfo => field ??= GenerateStubLightData();
         public bool BonesTransformMesh { get; set; }
         private bool _preprocessed;
 
@@ -89,7 +91,7 @@ namespace CBRE.DataStructures.Models
             _preprocessed = true;
 
             PreCalculateChromeCoordinates();
-            CombineTextures();
+            //CombineTextures();
             NormaliseTextureCoordinates();
         }
 
@@ -217,6 +219,23 @@ namespace CBRE.DataStructures.Models
                     v.TextureV /= skin.Height;
                 }
             }
+        }
+
+        private IReadOnlyList<MeshLightInfo> GenerateStubLightData() {
+            var transforms = GetTransforms();
+            List<MeshLightInfo> stubLightData = new List<MeshLightInfo>(Textures.Count);
+            foreach (var meshGroup in GetActiveMeshes()
+                         .GroupBy(x => x.SkinRef)
+                         .OrderBy(x => x.Key)) {
+                var vertices = meshGroup.SelectMany(x => x.Vertices
+                        .Select(x => new VertexLightInfo(x, new(
+                                x.Location * transforms[x.BoneWeightings.First().Bone.BoneIndex]),
+                            new(0.5f, 0.5f, 0.5f))))
+                    .ToList();
+                var indices = Enumerable.Range(0, vertices.Count).ToList();
+                stubLightData.Add(new(vertices, indices));
+            }
+            return stubLightData;
         }
 
         public void Dispose()

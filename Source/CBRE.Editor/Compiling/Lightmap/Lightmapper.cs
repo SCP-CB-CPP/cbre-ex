@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using CBRE.Common.Extensions;
 using CBRE.DataStructures.Models;
+using CBRE.Editor.Compiling.Lightmap.Model;
 using CBRE.Extensions;
 using CBRE.Providers.Model;
 using Microsoft.WindowsAPICodePack.Taskbar;
@@ -496,6 +497,8 @@ namespace CBRE.Editor.Compiling.Lightmap
             buffers = null;
             GC.Collect();
 
+            ModelLightmapper.LightmapModels(document.Map);
+            
             UpdateProgress(exportForm, "Lightmapping complete!", 1.0f);
         }
 

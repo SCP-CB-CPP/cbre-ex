@@ -11,6 +11,10 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using CBRE.Common.Extensions;
+using CBRE.DataStructures.Models;
+using CBRE.DataStructures.Models.LightInfo;
+using CBRE.Editor.Extensions;
+using CBRE.Providers.Model;
 using Path = System.IO.Path;
 
 namespace CBRE.Editor.Compiling
@@ -29,7 +33,9 @@ namespace CBRE.Editor.Compiling
             DIFFUSE = 1,
             LM = 2
         };
-
+        
+        private record struct ModelTextureRenderInfo(string TextureName, int VertexCount, IEnumerable<VertexLightInfo> Vertices, IReadOnlyList<int> Indices);
+        
         private const byte EXPORTED_VERSION = 2;
         
         public static void SaveToFile(string filename, Document document, ExportForm form, bool is1_3_12)
@@ -121,7 +127,13 @@ namespace CBRE.Editor.Compiling
             
             var waypoints = entities.TryGetValue("waypoint", out var wp) ? wp.ToArray() : [];
             var soundEmitters = entities.TryGetValue("soundemitter", out var se) ? se.ToArray() : [];
-            var props = entities.TryGetValue("model", out var p) ? p.ToArray() : [];
+            var modelEntities = entities.TryGetValue("model", out var p) ? p : Enumerable.Empty<Entity>();
+            var modelEntitiesGrouped = modelEntities
+                .GroupBy(x => x.EntityData.GetPropertyValue("bake").ToBool())
+                .ToDictionary(x => x.Key, x => x.ToArray());
+            var props = modelEntitiesGrouped.TryGetValue(false, out var regular) ? regular : [];
+            var bakedProps = modelEntitiesGrouped.TryGetValue(true, out var baked) ? baked : [];
+            
             var screens = entities.TryGetValue("screen", out var s) ? s.ToArray() : [];
 
             FileStream stream = new FileStream(Path.Combine(filepath, filename), FileMode.Create);
@@ -146,13 +158,17 @@ namespace CBRE.Editor.Compiling
             //Making each face its own collision object is too slow, and merging all of
             //them together is not optimal either.
 
-            WriteFaces(faces, transparentFaces);
+            var models = bakedProps
+                .GroupBy(x => x.EntityData.GetPropertyValue("hascollision").ToBool())
+                .ToDictionary(x => x.Key, x => x.ToArray());
+
+            WriteFaces(faces, transparentFaces, models.TryGetValue(true, out var collModels) ? collModels : []);
             
             if (is1_3_12) {
-                WriteFaces(facesNoColl, transparentFacesNoColl);
+                WriteFaces(facesNoColl, transparentFacesNoColl, models.TryGetValue(false, out var noCollModels) ? noCollModels : []);
             }
             
-            void WriteFaces(ICollection<Face> faces, ICollection<Face> transparentFaces) {
+            void WriteFaces(IReadOnlyCollection<Face> faces, IReadOnlyCollection<Face> transparentFaces, IReadOnlyCollection<Entity> models) {
                 int texCount = 0;
                 for (int i = 0; i < textures.Count; i++)
                 {
@@ -160,7 +176,7 @@ namespace CBRE.Editor.Compiling
                     texCount += transparentFaces.Any(x => x.Texture.Name == textures[i].Item1) ? 1 : 0;
                 }
 
-                br.Write(texCount);
+                br.Write(texCount + models.Sum(x => x.GetModel().Model.Textures.Count));
 
                 for (int i = 0; i < textures.Count; i++)
                 {
@@ -273,6 +289,44 @@ namespace CBRE.Editor.Compiling
                                 vertOffset += face.Vertices.Count;
                             }
                         }
+                    }
+                }
+                
+                foreach (var entity in models) {
+                    foreach (var info in GetModelLightData(entity)) {
+                        byte flags = 0;
+                        br.Write(flags);
+            
+                        flags = 1;
+                        br.Write(flags);
+                        br.WriteB3DString(Directories.GetTextureExtension(Path.Combine("Props",
+                            Path.GetFileNameWithoutExtension(info.TextureName))));
+            
+                        br.Write(info.VertexCount);
+                        
+                        foreach (var vertex in info.Vertices) {
+                            WriteVertex(vertex);
+                        }
+            
+                        br.Write(info.Indices.Count / 3);
+                        foreach (var t in info.Indices) {
+                            br.Write(t);
+                        }
+                    }
+                    
+                    void WriteVertex(VertexLightInfo info) {
+                        br.Write((float)info.Position.X);
+                        br.Write((float)info.Position.Z);
+                        br.Write((float)info.Position.Y);
+
+                        br.Write(info.Vertex.TextureU);
+                        br.Write(info.Vertex.TextureV);
+                        br.Write(0.0f);
+                        br.Write(0.0f);
+                
+                        br.Write((byte)(Math.Min(1f, info.Light.X) * 255f)); //r
+                        br.Write((byte)(Math.Min(1f, info.Light.Y) * 255f)); //g
+                        br.Write((byte)(Math.Min(1f, info.Light.Z) * 255f)); //b
                     }
                 }
             }
@@ -543,6 +597,32 @@ namespace CBRE.Editor.Compiling
                     
                     break;
             }
+        }
+        
+        private static IEnumerable<ModelTextureRenderInfo> GetModelLightData(Entity entity) {
+            if (entity.GetModel() is not ModelReference model) throw new("Entity has no model?");
+            var modelLightData = entity.GetModelLightData();
+            if (modelLightData != null) {
+                if (LightmapConfig.LightmapOnExport) {
+                    return modelLightData.MeshLightInfos
+                        .Select((x, i) => new ModelTextureRenderInfo(model.Model.Textures[i].Name,
+                            x.Vertices.Count, x.Vertices.AsEnumerable(), x.Indices));
+                }
+
+                var nowTransform = entity.GetTransform();
+                var revertPrevTransform = modelLightData.UsedWorldTransform.Inverse();
+                var fullTransform = revertPrevTransform * nowTransform;
+                return modelLightData.MeshLightInfos
+                    .Select((x, i) => new ModelTextureRenderInfo(model.Model.Textures[i].Name,
+                        x.Vertices.Count, x.Vertices.Select(y => y with { Position = y.Position * fullTransform }),
+                        x.Indices));
+            }
+
+            var transform = entity.GetTransform();
+            return model.Model.StubLightInfo.Select((x, i) => new ModelTextureRenderInfo(model.Model.Textures[i].Name,
+                x.Vertices.Count, x.Vertices
+                    .Select(y => y with { Position = y.Position * transform }),
+                x.Indices));
         }
     }
 }
