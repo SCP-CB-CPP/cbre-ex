@@ -2,18 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric
 {
-    [Serializable]
-    public class BoxF : ISerializable
+    public record struct BoxF(CoordinateF Start, CoordinateF End)
     {
         public readonly static BoxF Empty = new BoxF(CoordinateF.Zero, CoordinateF.Zero);
 
-        public CoordinateF Start { get; private set; }
-        public CoordinateF End { get; private set; }
-        public CoordinateF Center { get; private set; }
+        public CoordinateF Center { get; private set; } = (Start + End) / 2f;
 
         /// <summary>
         /// The X value difference of this box
@@ -44,15 +40,7 @@ namespace CBRE.DataStructures.Geometric
             get { return new CoordinateF(Width, Length, Height); }
         }
 
-        public BoxF(CoordinateF start, CoordinateF end)
-        {
-            Start = start;
-            End = end;
-            Center = (Start + End) / 2;
-        }
-
-        public BoxF(IEnumerable<CoordinateF> coordinates)
-        {
+        public static BoxF FromPoints(IEnumerable<CoordinateF> coordinates) {
             if (!coordinates.Any())
             {
                 throw new Exception("Cannot create a bounding box out of zero coordinates.");
@@ -68,13 +56,11 @@ namespace CBRE.DataStructures.Geometric
                 max.Y = Math.Max(vertex.Y, max.Y);
                 max.Z = Math.Max(vertex.Z, max.Z);
             }
-            Start = min;
-            End = max;
-            Center = (Start + End) / 2;
+            
+            return new(min, max);
         }
 
-        public BoxF(IEnumerable<BoxF> boxes)
-        {
+        public static BoxF FromBoxes(IEnumerable<BoxF> boxes) {
             if (!boxes.Any())
             {
                 throw new Exception("Cannot create a bounding box out of zero other boxes.");
@@ -90,22 +76,8 @@ namespace CBRE.DataStructures.Geometric
                 max.Y = Math.Max(box.End.Y, max.Y);
                 max.Z = Math.Max(box.End.Z, max.Z);
             }
-            Start = min;
-            End = max;
-            Center = (Start + End) / 2;
-        }
-
-        protected BoxF(SerializationInfo info, StreamingContext context)
-        {
-            Start = (CoordinateF)info.GetValue("Start", typeof(CoordinateF));
-            End = (CoordinateF)info.GetValue("End", typeof(CoordinateF));
-            Center = (Start + End) / 2;
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("Start", Start);
-            info.AddValue("End", End);
+            
+            return new(min, max);
         }
 
         public bool IsEmpty()
@@ -115,13 +87,13 @@ namespace CBRE.DataStructures.Geometric
         public IEnumerable<CoordinateF> GetBoxPoints()
         {
             yield return new CoordinateF(Start.X, End.Y, End.Z);
-            yield return End.Clone();
+            yield return End;
             yield return new CoordinateF(Start.X, Start.Y, End.Z);
             yield return new CoordinateF(End.X, Start.Y, End.Z);
 
             yield return new CoordinateF(Start.X, End.Y, Start.Z);
             yield return new CoordinateF(End.X, End.Y, Start.Z);
-            yield return Start.Clone();
+            yield return Start;
             yield return new CoordinateF(End.X, Start.Y, Start.Z);
         }
 
@@ -139,13 +111,13 @@ namespace CBRE.DataStructures.Geometric
         public CoordinateF[][] GetBoxFaces()
         {
             CoordinateF topLeftBack = new CoordinateF(Start.X, End.Y, End.Z);
-            CoordinateF topRightBack = End.Clone();
+            CoordinateF topRightBack = End;
             CoordinateF topLeftFront = new CoordinateF(Start.X, Start.Y, End.Z);
             CoordinateF topRightFront = new CoordinateF(End.X, Start.Y, End.Z);
 
             CoordinateF bottomLeftBack = new CoordinateF(Start.X, End.Y, Start.Z);
             CoordinateF bottomRightBack = new CoordinateF(End.X, End.Y, Start.Z);
-            CoordinateF bottomLeftFront = Start.Clone();
+            CoordinateF bottomLeftFront = Start;
             CoordinateF bottomRightFront = new CoordinateF(End.X, Start.Y, Start.Z);
             return new[]
                        {
@@ -161,13 +133,13 @@ namespace CBRE.DataStructures.Geometric
         public IEnumerable<LineF> GetBoxLines()
         {
             CoordinateF topLeftBack = new CoordinateF(Start.X, End.Y, End.Z);
-            CoordinateF topRightBack = End.Clone();
+            CoordinateF topRightBack = End;
             CoordinateF topLeftFront = new CoordinateF(Start.X, Start.Y, End.Z);
             CoordinateF topRightFront = new CoordinateF(End.X, Start.Y, End.Z);
 
             CoordinateF bottomLeftBack = new CoordinateF(Start.X, End.Y, Start.Z);
             CoordinateF bottomRightBack = new CoordinateF(End.X, End.Y, Start.Z);
-            CoordinateF bottomLeftFront = Start.Clone();
+            CoordinateF bottomLeftFront = Start;
             CoordinateF bottomRightFront = new CoordinateF(End.X, Start.Y, Start.Z);
 
             yield return new LineF(topLeftBack, topRightBack);
@@ -268,12 +240,7 @@ namespace CBRE.DataStructures.Geometric
 
         public BoxF Transform(IUnitTransformation transform)
         {
-            return new BoxF(GetBoxPoints().Select(transform.Transform));
-        }
-
-        public BoxF Clone()
-        {
-            return new BoxF(Start.Clone(), End.Clone());
+            return BoxF.FromPoints(GetBoxPoints().Select(transform.Transform));
         }
     }
 }

@@ -19,7 +19,7 @@ namespace CBRE.Editor.Compiling.Lightmap
         public CoordinateF Origin;
         public float Range;
 
-        public CoordinateF Direction;
+        public CoordinateF? Direction;
         public float? innerCos;
         public float? outerCos;
 

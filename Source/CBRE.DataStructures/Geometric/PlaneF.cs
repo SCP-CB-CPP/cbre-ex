@@ -107,19 +107,21 @@ namespace CBRE.DataStructures.Geometric
         /// of the plane and line when intersecting. Defaults to false.</param>
         /// <param name="ignoreSegment">Set to true to ignore the start and
         /// end points of the line in the intersection. Defaults to false.</param>
-        /// <returns>The point of intersection, or null if the line does not intersect</returns>
-        public CoordinateF GetIntersectionPoint(LineF line, bool ignoreDirection = false, bool ignoreSegment = false)
+        /// <returns>True if the line intersects with the plane, false otherwise</returns>
+        public bool GetIntersectionPoint(LineF line, out CoordinateF intersectPoint, bool ignoreDirection = false, bool ignoreSegment = false)
         {
             // http://softsurfer.com/Archive/algorithm_0104/algorithm_0104B.htm#Line%20Intersections
             // http://paulbourke.net/geometry/planeline/
-
+            intersectPoint = default;
+            
             CoordinateF dir = line.End - line.Start;
             float denominator = -Normal.Dot(dir);
-            if (Math.Abs(denominator) < 0.00001f || (!ignoreDirection && denominator < 0)) return null;
+            if (Math.Abs(denominator) < 0.00001f || (!ignoreDirection && denominator < 0)) return false;
             float numerator = Normal.Dot(line.Start - Normal * DistanceFromOrigin);
             float u = numerator / denominator;
-            if (!ignoreSegment && (u < 0 || u > 1)) return null;
-            return line.Start + u * dir;
+            if (!ignoreSegment && (u < 0 || u > 1)) return false;
+            intersectPoint = line.Start + u * dir;
+            return true;
         }
 
         /// <summary>
@@ -163,19 +165,21 @@ namespace CBRE.DataStructures.Geometric
         /// Intersects three planes and gets the point of their intersection.
         /// </summary>
         /// <returns>The point that the planes intersect at, or null if they do not intersect at a point.</returns>
-        public static CoordinateF Intersect(PlaneF p1, PlaneF p2, PlaneF p3)
+        public static bool Intersect(PlaneF p1, PlaneF p2, PlaneF p3, out CoordinateF intersectPoint)
         {
             // http://paulbourke.net/geometry/3planes/
+            intersectPoint = default;
 
             CoordinateF c1 = p2.Normal.Cross(p3.Normal);
             CoordinateF c2 = p3.Normal.Cross(p1.Normal);
             CoordinateF c3 = p1.Normal.Cross(p2.Normal);
 
             float denom = p1.Normal.Dot(c1);
-            if (denom < 0.00001f) return null; // No intersection, planes must be parallel
+            if (denom < 0.00001f) return false; // No intersection, planes must be parallel
 
             CoordinateF numer = (-p1.D * c1) + (-p2.D * c2) + (-p3.D * c3);
-            return numer / denom;
+            intersectPoint = numer / denom;
+            return true;
         }
 
         public bool EquivalentTo(PlaneF other, float delta = 0.0001f)

@@ -10,18 +10,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using CBRE.Common.Extensions;
 using CBRE.DataStructures.Models;
-using CBRE.Editor.Extensions;
 using CBRE.Extensions;
 using CBRE.Providers.Model;
 using Microsoft.WindowsAPICodePack.Taskbar;
-using ThreadState = System.Threading.ThreadState;
 
 namespace CBRE.Editor.Compiling.Lightmap
 {
@@ -285,7 +284,7 @@ namespace CBRE.Editor.Compiling.Lightmap
                         lmGroups[i].BoundingBox.IntersectsWith(lmGroups[j].BoundingBox))
                     {
                         lmGroups[i].Faces.AddRange(lmGroups[j].Faces);
-                        lmGroups[i].BoundingBox = new BoxF(new BoxF[] { lmGroups[i].BoundingBox, lmGroups[j].BoundingBox });
+                        lmGroups[i].BoundingBox = BoxF.FromBoxes([lmGroups[i].BoundingBox, lmGroups[j].BoundingBox]);
                         lmGroups.RemoveAt(j);
                         j = i + 1;
                     }
@@ -313,13 +312,10 @@ namespace CBRE.Editor.Compiling.Lightmap
                 return 0;
             });
 
-            FaceRenderThreads = new List<Thread>();
-
             UpdateProgress(exportForm, "Finding light entities...", 0.04f);
             Light.FindLights(map, out lightEntities);
 
             List<LMFace> allBlockers = lmGroups.Select(q => q.Faces).SelectMany(q => q).Where(f => f.CastsShadows).Union(exclusiveBlockers).ToList();
-            int faceCount = 0;
 
             List<LightmapGroup> uvCalcFaces = new List<LightmapGroup>(lmGroups);
 
@@ -351,59 +347,29 @@ namespace CBRE.Editor.Compiling.Lightmap
                 }
             }
 
-            foreach (LightmapGroup group in lmGroups)
-            {
-                foreach (LMFace face in group.Faces)
-                {
-                    faceCount++;
-                    Thread newThread = CreateLightmapRenderThread(document, buffers, lightEntities, group, face, allBlockers);
-                    FaceRenderThreads.Add(newThread);
+            var faceCount = lmGroups.SelectMany(group => group.Faces).Count();
+            var faceNum = 0;
+            var cts = new CancellationTokenSource();
+            var updateTask = Task.Run(() => {
+                while (!cts.Token.IsCancellationRequested) {
+                    UpdateProgress(exportForm, faceNum + "/" + faceCount + " faces complete",
+                        0.05f + ((float)faceNum / (float)faceCount) * 0.85f);
+                    Thread.Sleep(100);
                 }
-            }
-
-            int faceNum = 0;
-
-            if (LightmapConfig.BakeModelShadows)
-            {
-                UpdateProgress(exportForm, $"Found {blockerCount + modelBlockerCount} blockers, {blockerCount} which are from brushes, and {modelBlockerCount} from models", 0.05f);
-            }
-            else
-            {
-                UpdateProgress(exportForm, $"Found {blockerCount} blockers from brushes.", 0.05f);
-            }
-            
-            UpdateProgress(exportForm, "Started calculating brightness levels...", 0.05f);
-            while (FaceRenderThreads.Count > 0)
-            {
-                for (int i = 0; i < LightmapConfig.MaxThreadCount; i++)
-                {
-                    if (i >= FaceRenderThreads.Count) break;
-                    if (FaceRenderThreads[i].ThreadState == ThreadState.Unstarted)
-                    {
-                        FaceRenderThreads[i].Start();
-                    }
-                    else if (!FaceRenderThreads[i].IsAlive)
-                    {
-                        FaceRenderThreads.RemoveAt(i);
-                        i--;
-                        faceNum++;
-                        UpdateProgress(exportForm, faceNum.ToString() + "/" + faceCount.ToString() + " faces complete", 0.05f + ((float)faceNum / (float)faceCount) * 0.85f);
-                    }
-                }
-
-                if (threadExceptions.Count > 0)
-                {
-                    for (int i = 0; i < FaceRenderThreads.Count; i++)
-                    {
-                        if (FaceRenderThreads[i].IsAlive)
-                        {
-                            FaceRenderThreads[i].Abort();
-                        }
-                    }
-                    throw new Exception(threadExceptions[0].Message + "\n" + threadExceptions[0].StackTrace);
-                }
-                Thread.Yield();
-            }
+            });
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var tasks = lmGroups.SelectMany(group => group.Faces.Select(face => (group, face)))
+                .Select(x => Task.Run(() => {
+                    RenderLightOntoFace(document, buffers, lightEntities, x.group, x.face, allBlockers);
+                    Interlocked.Increment(ref faceNum);
+                }))
+                .ToArray();
+            Task.WhenAll(tasks).Wait();
+            cts.Cancel();
+            updateTask.Wait();
+            stopwatch.Stop();
+            UpdateProgress(exportForm, $"Rendering faces took {stopwatch.Elapsed}", 0.95f);
 
             //blur the lightmap so it doesn't look too pixellated
             UpdateProgress(exportForm, "Blurring lightmap...", 0.95f);
@@ -569,26 +535,9 @@ namespace CBRE.Editor.Compiling.Lightmap
             }
         }
 
-        private static Thread CreateLightmapRenderThread(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces)
-        {
-            return new Thread(() =>
-            {
-                try
-                {
-                    RenderLightOntoFace(doc, bitmaps, lights, group, targetFace, blockerFaces);
-                }
-                catch (ThreadAbortException)
-                {
-                    //do nothing
-                }
-                catch (Exception e)
-                {
-                    threadExceptions.Add(new LMThreadException(e));
-                }
-            })
-            { CurrentCulture = CultureInfo.InvariantCulture };
-        }
-
+        [ThreadStatic]
+        private static ColorData data;
+        
         private static void RenderLightOntoFace(Document doc, float[][] bitmaps, List<Light> lights, LightmapGroup group, LMFace targetFace, IEnumerable<LMFace> blockerFaces)
         {
             Random rand = new Random(666);
@@ -602,7 +551,7 @@ namespace CBRE.Editor.Compiling.Lightmap
                 textureDims = doc.TextureCollection.Lightmaps[0].Width;
             }
 
-            lights = lights.FindAll(x =>
+            var relevantLights = lights.Where(x =>
             {
                 float range = x.Range;
                 BoxF lightBox = new BoxF(x.Origin - new CoordinateF(range, range, range), x.Origin + new CoordinateF(range, range, range));
@@ -656,30 +605,18 @@ namespace CBRE.Editor.Compiling.Lightmap
 
             int iterX = (int)Math.Ceiling((maxX.Value - minX.Value) / LightmapConfig.DownscaleFactor);
             int iterY = (int)Math.Ceiling((maxY.Value - minY.Value) / LightmapConfig.DownscaleFactor);
+            
+            data.Initialize((uint)iterX, (uint)iterY);
 
-            float[][,] r = new float[4][,];
-            r[0] = new float[iterX, iterY];
-            r[1] = new float[iterX, iterY];
-            r[2] = new float[iterX, iterY];
-            r[3] = new float[iterX, iterY];
-            float[][,] g = new float[4][,];
-            g[0] = new float[iterX, iterY];
-            g[1] = new float[iterX, iterY];
-            g[2] = new float[iterX, iterY];
-            g[3] = new float[iterX, iterY];
-            float[][,] b = new float[4][,];
-            b[0] = new float[iterX, iterY];
-            b[1] = new float[iterX, iterY];
-            b[2] = new float[iterX, iterY];
-            b[3] = new float[iterX, iterY];
-
-            foreach (Light light in lights)
+            foreach (Light light in relevantLights)
             {
                 CoordinateF lightPos = light.Origin;
                 float lightRange = light.Range;
                 CoordinateF lightColor = light.Color * (1.0f / 255.0f) * light.Intensity;
 
-                BoxF lightBox = new BoxF(new BoxF[] { targetFace.BoundingBox, new BoxF(light.Origin - new CoordinateF(30.0f, 30.0f, 30.0f), light.Origin + new CoordinateF(30.0f, 30.0f, 30.0f)) });
+                BoxF lightBox = BoxF.FromBoxes([targetFace.BoundingBox,
+                    new BoxF(light.Origin - new CoordinateF(30.0f, 30.0f, 30.0f),
+                        light.Origin + new CoordinateF(30.0f, 30.0f, 30.0f))]);
                 List<LMFace> applicableBlockerFaces = blockerFaces.Where(x =>
                 {
                     if (x == targetFace) return false;
@@ -689,15 +626,7 @@ namespace CBRE.Editor.Compiling.Lightmap
                     return false;
                 }).ToList();
 
-                bool[,] illuminated = new bool[iterX, iterY];
-
-                for (int y = 0; y < iterY; y++)
-                {
-                    for (int x = 0; x < iterX; x++)
-                    {
-                        illuminated[x, y] = true;
-                    }
-                }
+                data.SetFullyIlluminated();
 
                 for (int y = 0; y < iterY; y++)
                 {
@@ -734,29 +663,30 @@ namespace CBRE.Editor.Compiling.Lightmap
                         int tX = (int)(writeX + x + (int)(minX - group.minTotalX) / LightmapConfig.DownscaleFactor);
                         int tY = (int)(writeY + y + (int)(minY - group.minTotalY) / LightmapConfig.DownscaleFactor);
 
-                        CoordinateF luxelColor0 = new CoordinateF(r[0][x, y], g[0][x, y], b[0][x, y]);
-                        CoordinateF luxelColor1 = new CoordinateF(r[1][x, y], g[1][x, y], b[1][x, y]);
-                        CoordinateF luxelColor2 = new CoordinateF(r[2][x, y], g[2][x, y], b[2][x, y]);
-                        CoordinateF luxelColorNorm = new CoordinateF(r[3][x, y], g[3][x, y], b[3][x, y]);
+                        CoordinateF luxelColor0 = new CoordinateF(data.R(0, x, y), data.G(0, x, y), data.B(0, x, y));
+                        CoordinateF luxelColor1 = new CoordinateF(data.R(1, x, y), data.G(1, x, y), data.B(1, x, y));
+                        CoordinateF luxelColor2 = new CoordinateF(data.R(2, x, y), data.G(2, x, y), data.B(2, x, y));
+                        CoordinateF luxelColorNorm = new CoordinateF(data.R(3, x, y), data.G(3, x, y), data.B(3, x, y));
 
                         float dotToLight0 = Math.Max((lightPos - pointOnPlane).Normalise().Dot(targetFace.LightBasis0), 0.0f);
                         float dotToLight1 = Math.Max((lightPos - pointOnPlane).Normalise().Dot(targetFace.LightBasis1), 0.0f);
                         float dotToLight2 = Math.Max((lightPos - pointOnPlane).Normalise().Dot(targetFace.LightBasis2), 0.0f);
                         float dotToLightNorm = Math.Max((lightPos - pointOnPlane).Normalise().Dot(targetFace.Normal), 0.0f);
 
-                        if (illuminated[x, y] && (pointOnPlane - lightPos).LengthSquared() < lightRange * lightRange)
+                        if (data.Illuminated(x, y) && (pointOnPlane - lightPos).LengthSquared() < lightRange * lightRange)
                         {
 #if TRUE
                             LineF lineTester = new LineF(lightPos, pointOnPlane);
                             for (int i = 0; i < applicableBlockerFaces.Count; i++)
                             {
                                 LMFace otherFace = applicableBlockerFaces[i];
-                                CoordinateF hit = otherFace.GetIntersectionPoint(lineTester);
-                                if (hit != null && ((hit - leewayPoint).Dot(group.Plane.Normal) > 0.0f || (hit - pointOnPlane).LengthSquared() > LightmapConfig.DownscaleFactor * 2f))
+                                if (otherFace.GetIntersectionPoint(lineTester, out var hit)
+                                    && ((hit - leewayPoint).Dot(group.Plane.Normal) > 0.0f
+                                        || (hit - pointOnPlane).LengthSquared() > LightmapConfig.DownscaleFactor * 2f))
                                 {
                                     applicableBlockerFaces.RemoveAt(i);
                                     applicableBlockerFaces.Insert(0, otherFace);
-                                    illuminated[x, y] = false;
+                                    data.Illuminated(x, y) = false;
                                     i++;
                                     break;
                                 }
@@ -765,16 +695,16 @@ namespace CBRE.Editor.Compiling.Lightmap
                         }
                         else
                         {
-                            illuminated[x, y] = false;
+                            data.Illuminated(x, y) = false;
                         }
 
-                        if (illuminated[x, y])
+                        if (data.Illuminated(x, y))
                         {
                             float brightness = (lightRange - (pointOnPlane - lightPos).VectorMagnitude()) / lightRange;
 
                             if (light.Direction != null)
                             {
-                                float directionDot = light.Direction.Dot((pointOnPlane - lightPos).Normalise());
+                                float directionDot = light.Direction.Value.Dot((pointOnPlane - lightPos).Normalise());
 
                                 if (directionDot < light.innerCos)
                                 {
@@ -799,26 +729,26 @@ namespace CBRE.Editor.Compiling.Lightmap
                             brightness2 += ((float)rand.NextDouble() - 0.5f) * 0.005f;
                             brightnessNorm += ((float)rand.NextDouble() - 0.5f) * 0.005f;
 
-                            r[0][x, y] += lightColor.Z * brightness0; if (r[0][x, y] > 1.0f) r[0][x, y] = 1.0f; if (r[0][x, y] < 0) r[0][x, y] = 0;
-                            g[0][x, y] += lightColor.Y * brightness0; if (g[0][x, y] > 1.0f) g[0][x, y] = 1.0f; if (g[0][x, y] < 0) g[0][x, y] = 0;
-                            b[0][x, y] += lightColor.X * brightness0; if (b[0][x, y] > 1.0f) b[0][x, y] = 1.0f; if (b[0][x, y] < 0) b[0][x, y] = 0;
+                            data.R(0, x, y) += lightColor.Z * brightness0; if (data.R(0, x, y) > 1.0f) data.R(0, x, y) = 1.0f; if (data.R(0, x, y) < 0) data.R(0, x, y) = 0;
+                            data.G(0, x, y) += lightColor.Y * brightness0; if (data.G(0, x, y) > 1.0f) data.G(0, x, y) = 1.0f; if (data.G(0, x, y) < 0) data.G(0, x, y) = 0;
+                            data.B(0, x, y) += lightColor.X * brightness0; if (data.B(0, x, y) > 1.0f) data.B(0, x, y) = 1.0f; if (data.B(0, x, y) < 0) data.B(0, x, y) = 0;
 
-                            r[1][x, y] += lightColor.Z * brightness1; if (r[1][x, y] > 1.0f) r[1][x, y] = 1.0f; if (r[1][x, y] < 0) r[1][x, y] = 0;
-                            g[1][x, y] += lightColor.Y * brightness1; if (g[1][x, y] > 1.0f) g[1][x, y] = 1.0f; if (g[1][x, y] < 0) g[1][x, y] = 0;
-                            b[1][x, y] += lightColor.X * brightness1; if (b[1][x, y] > 1.0f) b[1][x, y] = 1.0f; if (b[1][x, y] < 0) b[1][x, y] = 0;
+                            data.R(1, x, y) += lightColor.Z * brightness1; if (data.R(1, x, y) > 1.0f) data.R(1, x, y) = 1.0f; if (data.R(1, x, y) < 0) data.R(1, x, y) = 0;
+                            data.G(1, x, y) += lightColor.Y * brightness1; if (data.G(1, x, y) > 1.0f) data.G(1, x, y) = 1.0f; if (data.G(1, x, y) < 0) data.G(1, x, y) = 0;
+                            data.B(1, x, y) += lightColor.X * brightness1; if (data.B(1, x, y) > 1.0f) data.B(1, x, y) = 1.0f; if (data.B(1, x, y) < 0) data.B(1, x, y) = 0;
 
-                            r[2][x, y] += lightColor.Z * brightness2; if (r[2][x, y] > 1.0f) r[2][x, y] = 1.0f; if (r[2][x, y] < 0) r[2][x, y] = 0;
-                            g[2][x, y] += lightColor.Y * brightness2; if (g[2][x, y] > 1.0f) g[2][x, y] = 1.0f; if (g[2][x, y] < 0) g[2][x, y] = 0;
-                            b[2][x, y] += lightColor.X * brightness2; if (b[2][x, y] > 1.0f) b[2][x, y] = 1.0f; if (b[2][x, y] < 0) b[2][x, y] = 0;
+                            data.R(2, x, y) += lightColor.Z * brightness2; if (data.R(2, x, y) > 1.0f) data.R(2, x, y) = 1.0f; if (data.R(2, x, y) < 0) data.R(2, x, y) = 0;
+                            data.G(2, x, y) += lightColor.Y * brightness2; if (data.G(2, x, y) > 1.0f) data.G(2, x, y) = 1.0f; if (data.G(2, x, y) < 0) data.G(2, x, y) = 0;
+                            data.B(2, x, y) += lightColor.X * brightness2; if (data.B(2, x, y) > 1.0f) data.B(2, x, y) = 1.0f; if (data.B(2, x, y) < 0) data.B(2, x, y) = 0;
+                            
+                            data.R(3, x, y) += lightColor.Z * brightnessNorm; if (data.R(3, x, y) > 1.0f) data.R(3, x, y) = 1.0f; if (data.R(3, x, y) < 0) data.R(3, x, y) = 0;
+                            data.G(3, x, y) += lightColor.Y * brightnessNorm; if (data.G(3, x, y) > 1.0f) data.G(3, x, y) = 1.0f; if (data.G(3, x, y) < 0) data.G(3, x, y) = 0;
+                            data.B(3, x, y) += lightColor.X * brightnessNorm; if (data.B(3, x, y) > 1.0f) data.B(3, x, y) = 1.0f; if (data.B(3, x, y) < 0) data.B(3, x, y) = 0;
 
-                            r[3][x, y] += lightColor.Z * brightnessNorm; if (r[3][x, y] > 1.0f) r[3][x, y] = 1.0f; if (r[3][x, y] < 0) r[3][x, y] = 0;
-                            g[3][x, y] += lightColor.Y * brightnessNorm; if (g[3][x, y] > 1.0f) g[3][x, y] = 1.0f; if (g[3][x, y] < 0) g[3][x, y] = 0;
-                            b[3][x, y] += lightColor.X * brightnessNorm; if (b[3][x, y] > 1.0f) b[3][x, y] = 1.0f; if (b[3][x, y] < 0) b[3][x, y] = 0;
-
-                            luxelColor0 = new CoordinateF(r[0][x, y], g[0][x, y], b[0][x, y]);
-                            luxelColor1 = new CoordinateF(r[1][x, y], g[1][x, y], b[1][x, y]);
-                            luxelColor2 = new CoordinateF(r[2][x, y], g[2][x, y], b[2][x, y]);
-                            luxelColorNorm = new CoordinateF(r[3][x, y], g[3][x, y], b[3][x, y]);
+                            luxelColor0 = new(data.R(0, x, y), data.G(0, x, y), data.B(0, x, y));
+                            luxelColor1 = new(data.R(1, x, y), data.G(1, x, y), data.B(1, x, y));
+                            luxelColor2 = new(data.R(2, x, y), data.G(2, x, y), data.B(2, x, y));
+                            luxelColorNorm = new(data.R(3, x, y), data.G(3, x, y), data.B(3, x, y));
 
                             if (tX >= 0 && tY >= 0 && tX < textureDims && tY < textureDims)
                             {
@@ -852,6 +782,46 @@ namespace CBRE.Editor.Compiling.Lightmap
                     }
                 }
             }
+        }
+        
+        private struct ColorData {
+            private bool[] _illuminatedBuffer;
+            private uint _requiredIllum;
+            private float[] _buffer;
+            private uint width;
+            private const uint INDEX_STRIDE = 3;
+            private const uint X_STRIDE = 4 * INDEX_STRIDE;
+
+            public void Initialize(uint width, uint height) {
+                this.width = width;
+                
+                var required = width * height * X_STRIDE;
+                if (_buffer == null || _buffer.Length < required) {
+                    _buffer = new float[required];
+                } else {
+                    Unsafe.InitBlock(ref Unsafe.As<float, byte>(ref _buffer[0]), 0, required * sizeof(float));
+                }
+
+                _requiredIllum = width * height;
+                if (_illuminatedBuffer == null || _illuminatedBuffer.Length < _requiredIllum) {
+                    _illuminatedBuffer = new bool[_requiredIllum];
+                }
+                
+            }
+
+            public void SetFullyIlluminated() {
+                Unsafe.InitBlock(ref Unsafe.As<bool, byte>(ref _illuminatedBuffer[0]), 1, _requiredIllum);
+            }
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ref float R(int idx, int x, int y) => ref _buffer[y * width * X_STRIDE + x * X_STRIDE + INDEX_STRIDE * idx + 0];
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ref float G(int idx, int x, int y) => ref _buffer[y * width * X_STRIDE + x * X_STRIDE + INDEX_STRIDE * idx + 1];
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ref float B(int idx, int x, int y) => ref _buffer[y * width * X_STRIDE + x * X_STRIDE + INDEX_STRIDE * idx + 2];
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ref bool Illuminated(int x, int y) => ref _illuminatedBuffer[y * width + x];
         }
     }
 }

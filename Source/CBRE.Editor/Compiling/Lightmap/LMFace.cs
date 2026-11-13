@@ -140,7 +140,7 @@ namespace CBRE.Editor.Compiling.Lightmap
 
         public virtual void UpdateBoundingBox()
         {
-            BoundingBox = new BoxF(Vertices.Select(x => x.Location));
+            BoundingBox = BoxF.FromPoints(Vertices.Select(x => x.Location));
         }
 
         /// <summary>
@@ -149,9 +149,9 @@ namespace CBRE.Editor.Compiling.Lightmap
         /// <param name="line">The intersection line</param>
         /// <returns>The point of intersection between the face and the line.
         /// Returns null if the line does not intersect this face.</returns>
-        public virtual CoordinateF GetIntersectionPoint(LineF line)
+        public virtual bool GetIntersectionPoint(LineF line, out CoordinateF intersectPoint)
         {
-            return GetIntersectionPoint(this, line);
+            return GetIntersectionPoint(this, line, out intersectPoint);
         }
 
         /// <summary>
@@ -173,18 +173,19 @@ namespace CBRE.Editor.Compiling.Lightmap
         public bool IntersectsWithBox(BoxF box)
         {
             List<Vertex> verts = Vertices.ToList();
-            return box.GetBoxLines().Any(x => GetIntersectionPoint(this, x, true) != null);
+            return box.GetBoxLines().Any(x => GetIntersectionPoint(this, x, out _, true));
         }
 
-        protected static CoordinateF GetIntersectionPoint(LMFace face, LineF line, bool ignoreDirection = false)
+        protected static bool GetIntersectionPoint(LMFace face, LineF line, out CoordinateF intersectPoint, bool ignoreDirection = false)
         {
             PlaneF plane = face.Plane;
-            CoordinateF intersect = plane.GetIntersectionPoint(line, ignoreDirection);
-            if (intersect == null) return null;
+            if (!plane.GetIntersectionPoint(line, out intersectPoint, ignoreDirection)) {
+                return false;
+            }
 
             List<CoordinateF> coordinates = face.Vertices.Select(x => x.Location).ToList();
             BoxF bbox = new BoxF(face.BoundingBox.Start - new CoordinateF(0.5f, 0.5f, 0.5f), face.BoundingBox.End + new CoordinateF(0.5f, 0.5f, 0.5f));
-            if (!bbox.CoordinateIsInside(intersect)) return null;
+            if (!bbox.CoordinateIsInside(intersectPoint)) return false;
 
             CoordinateF centerPoint = face.BoundingBox.Center;
             for (int i = 0; i < coordinates.Count; i++)
@@ -202,9 +203,9 @@ namespace CBRE.Editor.Compiling.Lightmap
                     lineNormal = -lineNormal;
                 }
 
-                if (lineNormal.Dot(intersect - lineMiddle) < 0) return null;
+                if (lineNormal.Dot(intersectPoint - lineMiddle) < 0) return false;
             }
-            return intersect;
+            return true;
         }
 
         public static void FindFacesAndGroups(Map map, out List<LMFace> faces, out List<LightmapGroup> lmGroups)
@@ -233,7 +234,7 @@ namespace CBRE.Editor.Compiling.Lightmap
                     }
                     group.Faces.Add(face);
                     group.Plane = new PlaneF(group.Plane.Normal, (face.Vertices[0].Location + group.Plane.PointOnPlane) / 2);
-                    group.BoundingBox = new BoxF(new BoxF[] { group.BoundingBox, faceBox });
+                    group.BoundingBox = BoxF.FromBoxes([group.BoundingBox, faceBox]);
                 }
             }
         }

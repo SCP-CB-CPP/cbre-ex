@@ -12,6 +12,7 @@ namespace CBRE.Editor.Compiling.Lightmap
         public BoxF BoundingBox;
         public List<LMFace> Faces;
 
+        private bool uvInit;
         public CoordinateF uAxis;
         public CoordinateF vAxis;
         public float? minTotalX;
@@ -23,8 +24,9 @@ namespace CBRE.Editor.Compiling.Lightmap
 
         private void CalculateInitialUV()
         {
-            if (uAxis == null || vAxis == null)
+            if (!uvInit)
             {
+                uvInit = true;
                 CoordinateF direction = Plane.GetClosestAxisToNormal();
                 CoordinateF tempV = direction == CoordinateF.UnitZ ? -CoordinateF.UnitY : -CoordinateF.UnitZ;
                 uAxis = Plane.Normal.Cross(tempV).Normalise();

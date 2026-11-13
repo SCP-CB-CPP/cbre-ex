@@ -3,8 +3,7 @@ using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric
 {
-    [Serializable]
-    public class CoordinateF : ISerializable
+    public record struct CoordinateF(float X, float Y, float Z)
     {
         public readonly static CoordinateF MaxValue = new CoordinateF(float.MaxValue, float.MaxValue, float.MaxValue);
         public readonly static CoordinateF MinValue = new CoordinateF(float.MinValue, float.MinValue, float.MinValue);
@@ -14,37 +13,7 @@ namespace CBRE.DataStructures.Geometric
         public readonly static CoordinateF UnitY = new CoordinateF(0, 1, 0);
         public readonly static CoordinateF UnitZ = new CoordinateF(0, 0, 1);
 
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
-
-        public CoordinateF(Coordinate c)
-        {
-            X = (float)c.X;
-            Y = (float)c.Y;
-            Z = (float)c.Z;
-        }
-
-        public CoordinateF(float x, float y, float z)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-        }
-
-        protected CoordinateF(SerializationInfo info, StreamingContext context)
-        {
-            X = info.GetSingle("X");
-            Y = info.GetSingle("Y");
-            Z = info.GetSingle("Z");
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("X", X);
-            info.AddValue("Y", Y);
-            info.AddValue("Z", Z);
-        }
+        public CoordinateF(Coordinate c) : this((float)c.X, (float)c.Y, (float)c.Z) { }
 
         public bool EquivalentTo(CoordinateF test, float delta = 0.0001f)
         {
@@ -59,13 +28,6 @@ namespace CBRE.DataStructures.Geometric
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return EquivalentTo(other);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj.GetType() == typeof(CoordinateF) && Equals((CoordinateF)obj);
         }
 
         public override int GetHashCode()
@@ -129,16 +91,6 @@ namespace CBRE.DataStructures.Geometric
             return new CoordinateF(Math.Abs(X), Math.Abs(Y), Math.Abs(Z));
         }
 
-        public static bool operator ==(CoordinateF c1, CoordinateF c2)
-        {
-            return Equals(c1, null) ? Equals(c2, null) : c1.Equals(c2);
-        }
-
-        public static bool operator !=(CoordinateF c1, CoordinateF c2)
-        {
-            return Equals(c1, null) ? !Equals(c2, null) : !c1.Equals(c2);
-        }
-
         public static CoordinateF operator +(CoordinateF c1, CoordinateF c2)
         {
             return new CoordinateF(c1.X + c2.X, c1.Y + c2.Y, c1.Z + c2.Z);
@@ -185,16 +137,6 @@ namespace CBRE.DataStructures.Geometric
         public override string ToString()
         {
             return "(" + X.ToString("0.0000") + " " + Y.ToString("0.0000") + " " + Z.ToString("0.0000") + ")";
-        }
-
-        public CoordinateF Clone()
-        {
-            return new CoordinateF(X, Y, Z);
-        }
-
-        public static CoordinateF Parse(string x, string y, string z)
-        {
-            return new CoordinateF(float.Parse(x), float.Parse(y), float.Parse(z));
         }
     }
 }
