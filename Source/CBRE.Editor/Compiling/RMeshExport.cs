@@ -129,7 +129,7 @@ namespace CBRE.Editor.Compiling
             var soundEmitters = entities.TryGetValue("soundemitter", out var se) ? se.ToArray() : [];
             var modelEntities = entities.TryGetValue("model", out var p) ? p : Enumerable.Empty<Entity>();
             var modelEntitiesGrouped = modelEntities
-                .GroupBy(x => x.EntityData.GetPropertyValue("bake").ToBool())
+                .GroupBy(x => x.EntityData.GetPropertyValue("bake")?.ToBool() ?? false)
                 .ToDictionary(x => x.Key, x => x.ToArray());
             var props = modelEntitiesGrouped.TryGetValue(false, out var regular) ? regular : [];
             var bakedProps = modelEntitiesGrouped.TryGetValue(true, out var baked) ? baked : [];
@@ -159,7 +159,7 @@ namespace CBRE.Editor.Compiling
             //them together is not optimal either.
 
             var models = bakedProps
-                .GroupBy(x => x.EntityData.GetPropertyValue("hascollision").ToBool())
+                .GroupBy(x => x.EntityData.GetPropertyValue("hascollision")?.ToBool() ?? true)
                 .ToDictionary(x => x.Key, x => x.ToArray());
 
             WriteFaces(faces, transparentFaces, models.TryGetValue(true, out var collModels) ? collModels : []);
