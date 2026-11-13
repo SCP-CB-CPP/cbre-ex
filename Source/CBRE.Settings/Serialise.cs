@@ -10,7 +10,7 @@ namespace CBRE.Settings
     {
         private static IEnumerable<PropertyInfo> GetProperties()
         {
-            Type[] list = new[] { typeof(Grid), typeof(General), typeof(Exporting), typeof(Select), typeof(Steam), typeof(View), typeof(Directories), typeof(LightmapConfig), typeof(Layout) };
+            Type[] list = new[] { typeof(Grid), typeof(General), typeof(Select), typeof(Steam), typeof(View), typeof(Directories), typeof(LightmapConfig), typeof(Layout) };
             return list.SelectMany(x => x.GetProperties(BindingFlags.Static | BindingFlags.Public));
         }
 

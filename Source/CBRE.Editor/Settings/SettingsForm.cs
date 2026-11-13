@@ -526,9 +526,6 @@ namespace CBRE.Editor.Settings
             AddSetting(() => CBRE.Settings.View.KeepCameraPositions, "Keep current camera positions when switching between maps");
             AddSetting(() => CBRE.Settings.View.KeepSelectedTool, "Keep current selected tool when switching between maps");
 
-            AddHeading("Lightmapping");
-            AddSetting(() => CBRE.Settings.Exporting.ShowModelBakingWarning, "Show model baking performance warning");
-
             AddHeading("Textures");
             AddSetting(() => CBRE.Settings.Select.ApplyTextureImmediately, "Apply texture immediately after browsing in the texture application tool");
 
