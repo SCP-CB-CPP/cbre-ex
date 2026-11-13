@@ -148,6 +148,7 @@ namespace CBRE.DataStructures.GameData
             modelDataObj.Properties.Add(new Property("castshadow", VariableType.Bool) { ShortDescription = "Cast Shadow", DefaultValue = "Yes" });
             modelDataObj.Properties.Add(new Property("effects", VariableType.Integer) { ShortDescription = "Effects", Description = "See Blitz3D's EntityFX for reference", DefaultValue = "0" });
             modelDataObj.Properties.Add(new Property("textureoverride", VariableType.String) { ShortDescription = "Texture Override", Description = "Texture to override the models's texture with. Extension must be suffixed.", DefaultValue = "" });
+            modelDataObj.Properties.Add(new Property("bake", VariableType.Bool) { ShortDescription = "Bake", DefaultValue = "No" });
             modelDataObj.Behaviours.Add(new Behaviour("sprite", "sprites/model"));
             modelDataObj.Behaviours.Add(new Behaviour("useModels"));
             Classes.Add(modelDataObj);

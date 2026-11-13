@@ -84,6 +84,16 @@ namespace CBRE.DataStructures.MapObjects
             EntityData = e.EntityData.Clone();
         }
 
+        public Matrix GetTransform() {
+            Coordinate scale = EntityData.GetPropertyCoordinate("scale", Coordinate.One);
+            scale = new Coordinate(scale.X, scale.Z, scale.Y);
+            Coordinate angles = GetAngles();
+            Matrix pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
+            Matrix yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
+            Matrix roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
+            return ((yaw * pitch * roll) * Matrix.Scale(scale)).Translate(Origin);
+        }
+        
         public override void UpdateBoundingBox(bool cascadeToParent = true)
         {
             if (GameData == null && !Children.Any())
@@ -94,13 +104,7 @@ namespace CBRE.DataStructures.MapObjects
             }
             else if (MetaData.Has<Box>("BoundingBox"))
             {
-                Coordinate scale = EntityData.GetPropertyCoordinate("scale", Coordinate.One);
-                scale = new Coordinate(scale.X, scale.Z, scale.Y);
-                Coordinate angles = GetAngles();
-                Matrix pitch = Matrix.Rotation(Quaternion.EulerAngles(DMath.DegreesToRadians(angles.X), 0, 0));
-                Matrix yaw = Matrix.Rotation(Quaternion.EulerAngles(0, 0, -DMath.DegreesToRadians(angles.Y)));
-                Matrix roll = Matrix.Rotation(Quaternion.EulerAngles(0, DMath.DegreesToRadians(angles.Z), 0));
-                Matrix tform = ((yaw * pitch * roll) * Matrix.Scale(scale)).Translate(Origin);
+                var tform = GetTransform();
                 if (MetaData.Has<bool>("RotateBoundingBox") && !MetaData.Get<bool>("RotateBoundingBox")) tform = Matrix.Translation(Origin);
                 BoundingBox = MetaData.Get<Box>("BoundingBox").Transform(new UnitMatrixMult(tform));
             }

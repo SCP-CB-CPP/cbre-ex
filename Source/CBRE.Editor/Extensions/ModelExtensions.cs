@@ -8,12 +8,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CBRE.DataStructures.Models.LightInfo;
 
 namespace CBRE.Editor.Extensions
 {
     public static class ModelExtensions
     {
         private const string ModelMetaKey = "Model";
+        private const string ModelLightDataMetaKey = "ModelLightData";
         private const string ModelNameMetaKey = "ModelName";
         private const string ModelBoundingBoxMetaKey = "BoundingBox";
 
@@ -159,6 +161,12 @@ namespace CBRE.Editor.Extensions
         {
             return entity.MetaData.Has<ModelReference>(ModelMetaKey);
         }
+        
+        public static ModelLightInfo? GetModelLightData(this Entity entity)
+            => entity.MetaData.Get<ModelLightInfo?>(ModelLightDataMetaKey);
+        
+        public static void SetModelLightData(this Entity entity, ModelLightInfo? lightData)
+            => entity.MetaData.Set(ModelLightDataMetaKey, lightData);
 
         public static int HideDistance(this Entity entity)
         {
