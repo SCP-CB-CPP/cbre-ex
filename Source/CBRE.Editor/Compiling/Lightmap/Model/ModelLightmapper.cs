@@ -18,7 +18,7 @@ public class ModelLightmapper {
         
         var modelsToBake = map.WorldSpawn.Find(x => x.ClassName == "model")
             .Cast<Entity>()
-            .Where(x => x.EntityData.GetPropertyValue("bake").ToBool());
+            .Where(x => x.EntityData.GetPropertyValue("bake")?.ToBool() ?? false);
         
         foreach (var model in modelsToBake) {
             model.SetModelLightData(BakeModel(model, lights));
