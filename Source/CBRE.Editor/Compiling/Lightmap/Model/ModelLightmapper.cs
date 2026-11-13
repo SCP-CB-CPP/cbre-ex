@@ -32,7 +32,7 @@ public class ModelLightmapper {
         
         var modelTransforms = model.Model.GetTransforms();
         for (var i = 0; i < modelTransforms.Count; i++) {
-            //modelTransforms = modelTransforms[i] * transform;
+            modelTransforms[i] *= transform.ToMatrixF();
         }
         
         var meshGroups = model.Model.GetActiveMeshes().GroupBy(x => x.SkinRef);
@@ -99,7 +99,7 @@ public class ModelLightmapper {
         Coordinate GetGlobal(MeshVertex vertex)
             => new Coordinate(
                 vertex.Location *
-                modelTransforms[vertex.BoneWeightings.First().Bone.BoneIndex]) * transform;
+                modelTransforms[vertex.BoneWeightings.First().Bone.BoneIndex]);
 
         static IEnumerable<(T, T, T)> Group3<T>(IEnumerable<T> source) {
             using var e = source.GetEnumerator();

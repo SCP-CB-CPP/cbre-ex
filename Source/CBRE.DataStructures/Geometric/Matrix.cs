@@ -207,6 +207,29 @@ namespace CBRE.DataStructures.Geometric
             return true;
         }
 
+        // Reflects fucked up evil semantic change in matrix multiplication.
+        public MatrixF ToMatrixF()
+        {
+            return new MatrixF(
+                (float)this[0],
+                (float)this[1],
+                (float)this[2],
+                (float)this[12],
+                (float)this[4],
+                (float)this[5],
+                (float)this[6],
+                (float)this[13],
+                (float)this[8],
+                (float)this[9],
+                (float)this[10],
+                (float)this[14],
+                (float)this[3],
+                (float)this[7],
+                (float)this[11],
+                (float)this[15]
+            );
+        }
+
         public Matrix4 ToGLSLMatrix4()
         {
             return new Matrix4(
