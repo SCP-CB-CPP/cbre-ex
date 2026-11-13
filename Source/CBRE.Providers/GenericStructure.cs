@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 namespace CBRE.Providers
 {
@@ -167,7 +168,7 @@ namespace CBRE.Providers
             string prop = this[name];
             Plane defaultValue = new Plane(Coordinate.UnitZ, 0);
             if (prop == null || prop.Count(c => c == ' ') != 8) return defaultValue;
-            string[] split = prop.Replace("(", "").Replace(")", "").Split(' ');
+            string[] split = RemoveChars(prop, "()").Split(' ');
             decimal x1, x2, x3, y1, y2, y3, z1, z2, z3;
             if (decimal.TryParse(split[0], out x1)
                 && decimal.TryParse(split[1], out y1)
@@ -191,8 +192,9 @@ namespace CBRE.Providers
         {
             string prop = this[name];
             if (defaultValue == null) defaultValue = Coordinate.Zero;
-            if (prop == null || prop.Count(c => c == ' ') != 2) return defaultValue;
-            string[] split = prop.Replace("[", "").Replace("]", "").Replace("(", "").Replace(")", "").Split(' ');
+            if (prop == null) return defaultValue;
+            
+            string[] split = RemoveChars(prop, "[]()").Split(' ');
             decimal x, y, z;
             if (decimal.TryParse(split[0], out x)
                 && decimal.TryParse(split[1], out y)
@@ -227,7 +229,7 @@ namespace CBRE.Providers
             string prop = this[name];
             Tuple<Coordinate, decimal, decimal> defaultValue = Tuple.Create(Coordinate.UnitX, 0m, 1m);
             if (prop == null || prop.Count(c => c == ' ') != 4) return defaultValue;
-            string[] split = prop.Replace("[", "").Replace("]", "").Split(' ');
+            string[] split = RemoveChars(prop, "[]").Split(' ');
             decimal x, y, z, sh, sc;
             if (decimal.TryParse(split[0], out x)
                 && decimal.TryParse(split[1], out y)
@@ -624,10 +626,10 @@ namespace CBRE.Providers
         /// <returns>The parsed structure</returns>
         private static GenericStructure ParseStructure(TextReader reader, string name)
         {
-            string[] spl = name.SplitWithQuotes();
+            var spl = name.SplitWithQuotes();
             GenericStructure gs = new GenericStructure(spl[0]);
             string line;
-            if (spl.Length != 2 || spl[1] != "{")
+            if (spl.Count != 2 || spl[1] != "{")
             {
                 do
                 {
@@ -656,8 +658,8 @@ namespace CBRE.Providers
         private static bool ValidStructStartString(string s)
         {
             if (string.IsNullOrEmpty(s)) return false;
-            string[] split = s.SplitWithQuotes();
-            return split.Length == 1 || (split.Length == 2 && split[1] == "{");
+            var split = s.SplitWithQuotes();
+            return split.Count == 1 || (split.Count == 2 && split[1] == "{");
         }
 
         /// <summary>
@@ -668,8 +670,8 @@ namespace CBRE.Providers
         private static bool ValidStructPropertyString(string s)
         {
             if (string.IsNullOrEmpty(s)) return false;
-            string[] split = s.SplitWithQuotes();
-            return split.Length == 2;
+            var split = s.SplitWithQuotes();
+            return split.Count == 2;
         }
 
         /// <summary>
@@ -679,8 +681,18 @@ namespace CBRE.Providers
         /// <param name="prop">The property string to parse</param>
         private static void ParseProperty(GenericStructure gs, string prop)
         {
-            string[] split = prop.SplitWithQuotes();
+            var split = prop.SplitWithQuotes();
             gs.Properties.Add(new GenericStructureProperty(split[0], (split[1] ?? "").Replace('`', '"')));
+        }
+
+        private string RemoveChars(string str, string chars) {
+            var sb = new StringBuilder();
+            foreach (var c in str) {
+                if (!chars.Contains(c)) {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
         }
         #endregion
     }
