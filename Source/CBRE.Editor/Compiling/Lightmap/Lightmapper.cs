@@ -28,7 +28,7 @@ namespace CBRE.Editor.Compiling.Lightmap
 {
     static class Lightmapper
     {
-        public static List<Thread> FaceRenderThreads { get; private set; }
+        public static CancellationTokenSource ActionCts;
 
         private static void UpdateProgress(ExportForm exportForm, string msg, float progress)
         {
@@ -341,13 +341,19 @@ namespace CBRE.Editor.Compiling.Lightmap
 
             var faceCount = lmGroups.SelectMany(group => group.Faces).Count();
             var faceNum = 0;
-            var cts = new CancellationTokenSource();
+            ActionCts = new();
+            var updateCts = new CancellationTokenSource();
             var updateTask = Task.Run(() => {
-                while (!cts.Token.IsCancellationRequested) {
-                    UpdateProgress(exportForm, faceNum + "/" + faceCount + " faces complete",
-                        0.05f + ((float)faceNum / (float)faceCount) * 0.85f);
+                while (!updateCts.Token.IsCancellationRequested && !ActionCts.Token.IsCancellationRequested) {
+                    UpdateFaces(faceNum);
                     Thread.Sleep(100);
                 }
+                if (!ActionCts.Token.IsCancellationRequested) {
+                    UpdateFaces(faceCount);
+                }
+                
+                void UpdateFaces(int count) => UpdateProgress(exportForm, count + "/" + faceCount + " faces complete",
+                    0.05f + ((float)count / (float)faceCount) * 0.85f);
             });
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -355,14 +361,16 @@ namespace CBRE.Editor.Compiling.Lightmap
                 .Select(x => Task.Run(() => {
                     RenderLightOntoFace(document, buffers, lightEntities, x.group, x.face, allBlockers);
                     Interlocked.Increment(ref faceNum);
-                }))
+                }, ActionCts.Token))
                 .ToArray();
             Task.WhenAll(tasks).Wait();
-            cts.Cancel();
+            updateCts.Cancel();
             updateTask.Wait();
             stopwatch.Stop();
             UpdateProgress(exportForm, $"Rendering faces took {stopwatch.Elapsed}", 0.95f);
 
+            if (ActionCts.Token.IsCancellationRequested) return;
+            
             //blur the lightmap so it doesn't look too pixellated
             UpdateProgress(exportForm, "Blurring lightmap...", 0.95f);
             float[] blurBuffer = new float[buffers[0].Length];

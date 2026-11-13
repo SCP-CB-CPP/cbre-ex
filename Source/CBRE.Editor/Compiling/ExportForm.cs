@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using CBRE.Editor.Compiling.Lightmap;
 using CBRE.UI.Native;
 using DarkModeForms;
 using Microsoft.WindowsAPICodePack.Taskbar;
@@ -307,14 +308,8 @@ namespace CBRE.Editor.Compiling
             }
             catch (ThreadAbortException)
             {
-                foreach (Thread thread in (Lightmap.Lightmapper.FaceRenderThreads ?? Enumerable.Empty<Thread>()))
-                {
-                    if (thread.IsAlive)
-                    {
-                        thread.Abort();
-                    }
-                }
-
+                Lightmapper.ActionCts.Cancel();
+                
                 ProgressLog.Invoke((MethodInvoker)(() => ProgressLog.AppendText("\nCancelled by the user")));
                 ProgressBar.Invoke((MethodInvoker)(() => ProgressBar.Value = 0));
                 ProgressBar.Invoke((MethodInvoker)(() => TaskbarManager.Instance.SetProgressValue(0, 10000)));
