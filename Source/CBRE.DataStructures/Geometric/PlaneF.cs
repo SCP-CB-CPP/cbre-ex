@@ -6,8 +6,7 @@ namespace CBRE.DataStructures.Geometric
     /// <summary>
     /// Defines a plane in the form Ax + By + Cz + D = 0
     /// </summary>
-    [Serializable]
-    public class PlaneF : ISerializable
+    public struct PlaneF
     {
         public CoordinateF Normal { get; private set; }
         public float DistanceFromOrigin { get; private set; }
@@ -68,17 +67,6 @@ namespace CBRE.DataStructures.Geometric
             D = -DistanceFromOrigin;
         }
 
-        protected PlaneF(SerializationInfo info, StreamingContext context) : this((CoordinateF)info.GetValue("Normal", typeof(CoordinateF)), info.GetSingle("DistanceFromOrigin"))
-        {
-
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("Normal", Normal);
-            info.AddValue("DistanceFromOrigin", DistanceFromOrigin);
-        }
-
         ///  <summary>Finds if the given point is above, below, or on the plane.</summary>
         ///  <param name="co">The coordinate to test</param>
         /// <param name="epsilon">Tolerance value</param>
@@ -119,7 +107,7 @@ namespace CBRE.DataStructures.Geometric
             if (Math.Abs(denominator) < 0.00001f || (!ignoreDirection && denominator < 0)) return false;
             float numerator = Normal.Dot(line.Start - Normal * DistanceFromOrigin);
             float u = numerator / denominator;
-            if (!ignoreSegment && (u < 0 || u > 1)) return false;
+            if (!ignoreSegment && u is < 0 or > 1) return false;
             intersectPoint = line.Start + u * dir;
             return true;
         }
@@ -156,11 +144,6 @@ namespace CBRE.DataStructures.Geometric
             return CoordinateF.UnitZ;
         }
 
-        public PlaneF Clone()
-        {
-            return new PlaneF(Normal, DistanceFromOrigin);
-        }
-
         /// <summary>
         /// Intersects three planes and gets the point of their intersection.
         /// </summary>
@@ -190,15 +173,12 @@ namespace CBRE.DataStructures.Geometric
 
         public bool Equals(PlaneF other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
             return Equals(other.Normal, Normal) && other.DistanceFromOrigin == DistanceFromOrigin;
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != typeof(PlaneF)) return false;
             return Equals((PlaneF)obj);
         }

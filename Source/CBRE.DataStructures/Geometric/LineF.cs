@@ -4,33 +4,11 @@ using System.Runtime.Serialization;
 
 namespace CBRE.DataStructures.Geometric
 {
-    [Serializable]
-    public class LineF : ISerializable
+    public record struct LineF(CoordinateF Start, CoordinateF End)
     {
-        public CoordinateF Start { get; set; }
-        public CoordinateF End { get; set; }
-
         public readonly static LineF AxisX = new LineF(CoordinateF.Zero, CoordinateF.UnitX);
         public readonly static LineF AxisY = new LineF(CoordinateF.Zero, CoordinateF.UnitY);
         public static readonly LineF AxisZ = new LineF(CoordinateF.Zero, CoordinateF.UnitZ);
-
-        public LineF(CoordinateF start, CoordinateF end)
-        {
-            Start = start;
-            End = end;
-        }
-
-        protected LineF(SerializationInfo info, StreamingContext context)
-        {
-            Start = (CoordinateF)info.GetValue("Start", typeof(CoordinateF));
-            End = (CoordinateF)info.GetValue("End", typeof(CoordinateF));
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("Start", Start);
-            info.AddValue("End", End);
-        }
 
         public LineF Reverse()
         {
@@ -78,41 +56,7 @@ namespace CBRE.DataStructures.Geometric
         public bool EquivalentTo(LineF other, float delta = 0.0001f)
         {
             return (Start.EquivalentTo(other.Start, delta) && End.EquivalentTo(other.End, delta))
-                || (End.EquivalentTo(other.Start, delta) && Start.EquivalentTo(other.End, delta));
-        }
-
-        public bool Equals(LineF other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return (Equals(other.Start, Start) && Equals(other.End, End))
-                || (Equals(other.End, Start) && Equals(other.Start, End));
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(LineF)) return false;
-            return Equals((LineF)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return ((Start != null ? Start.GetHashCode() : 0) * 397) ^ (End != null ? End.GetHashCode() : 0);
-            }
-        }
-
-        public static bool operator ==(LineF left, LineF right)
-        {
-            return Equals(left, right);
-        }
-
-        public static bool operator !=(LineF left, LineF right)
-        {
-            return !Equals(left, right);
+                   || (End.EquivalentTo(other.Start, delta) && Start.EquivalentTo(other.End, delta));
         }
     }
 }

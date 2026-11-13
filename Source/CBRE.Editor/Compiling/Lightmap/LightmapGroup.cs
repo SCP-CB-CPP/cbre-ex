@@ -102,19 +102,15 @@ namespace CBRE.Editor.Compiling.Lightmap
             vAxis = swapAxis;
         }
 
-        public static LightmapGroup FindCoplanar(List<LightmapGroup> lmGroups, LMFace otherFace)
-        {
-            foreach (LightmapGroup group in lmGroups)
-            {
-                if ((group.Plane.Normal - otherFace.Plane.Normal).LengthSquared() < 0.01f)
-                {
-                    PlaneF plane2 = new PlaneF(otherFace.Plane.Normal, otherFace.Vertices[0].Location);
-                    if (Math.Abs(plane2.EvalAtPoint((group.Plane.PointOnPlane))) > 4.0f) continue;
-                    BoxF faceBox = new BoxF(otherFace.BoundingBox.Start - new CoordinateF(3.0f, 3.0f, 3.0f), otherFace.BoundingBox.End + new CoordinateF(3.0f, 3.0f, 3.0f));
-                    if (faceBox.IntersectsWith(group.BoundingBox)) return group;
-                }
-            }
-            return null;
+        public static LightmapGroup FindCoplanar(List<LightmapGroup> lmGroups, LMFace otherFace) {
+            return lmGroups.AsParallel().FirstOrDefault(x => {
+                if (!((x.Plane.Normal - otherFace.Plane.Normal).LengthSquared() < 0.01f)) return false;
+                PlaneF plane2 = new PlaneF(otherFace.Plane.Normal, otherFace.Vertices[0].Location);
+                if (Math.Abs(plane2.EvalAtPoint(x.Plane.PointOnPlane)) > 4.0f) return false;
+                BoxF faceBox = new BoxF(otherFace.BoundingBox.Start - new CoordinateF(3.0f, 3.0f, 3.0f),
+                    otherFace.BoundingBox.End + new CoordinateF(3.0f, 3.0f, 3.0f));
+                return faceBox.IntersectsWith(x.BoundingBox);
+            });
         }
     }
 }

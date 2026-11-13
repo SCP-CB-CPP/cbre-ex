@@ -183,19 +183,19 @@ namespace CBRE.Editor.Compiling.Lightmap
                 return false;
             }
 
-            List<CoordinateF> coordinates = face.Vertices.Select(x => x.Location).ToList();
+            var verts = face.Vertices;
             BoxF bbox = new BoxF(face.BoundingBox.Start - new CoordinateF(0.5f, 0.5f, 0.5f), face.BoundingBox.End + new CoordinateF(0.5f, 0.5f, 0.5f));
             if (!bbox.CoordinateIsInside(intersectPoint)) return false;
 
             CoordinateF centerPoint = face.BoundingBox.Center;
-            for (int i = 0; i < coordinates.Count; i++)
+            for (int i = 0; i < verts.Count; i++)
             {
                 int i1 = i;
-                int i2 = (i + 1) % coordinates.Count;
+                int i2 = (i + 1) % verts.Count;
 
-                CoordinateF lineMiddle = (coordinates[i1] + coordinates[i2]) / 2f;
+                CoordinateF lineMiddle = (verts[i1].Location + verts[i2].Location) / 2f;
                 CoordinateF middleToCenter = centerPoint - lineMiddle;
-                CoordinateF v = coordinates[i1] - coordinates[i2];
+                CoordinateF v = verts[i1].Location - verts[i2].Location;
                 CoordinateF lineNormal = face.Plane.Normal.Cross(v);
 
                 if ((middleToCenter - lineNormal).LengthSquared() > (middleToCenter + lineNormal).LengthSquared())

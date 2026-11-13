@@ -6,6 +6,7 @@ using CBRE.Editor.UI;
 using CBRE.Settings;
 using CBRE.UI;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -27,20 +28,7 @@ namespace CBRE.Editor.Compiling.Lightmap
 {
     static class Lightmapper
     {
-        struct LMThreadException
-        {
-            public LMThreadException(Exception e)
-            {
-                Message = e.Message;
-                StackTrace = e.StackTrace;
-            }
-
-            public string Message;
-            public string StackTrace;
-        }
-
         public static List<Thread> FaceRenderThreads { get; private set; }
-        private static List<LMThreadException> threadExceptions;
 
         private static void UpdateProgress(ExportForm exportForm, string msg, float progress)
         {
@@ -169,10 +157,8 @@ namespace CBRE.Editor.Compiling.Lightmap
                 .Find(x => x.ClassName != null).OfType<Entity>()
                 .Where(y => y.GameData.Behaviours.FirstOrDefault(x => x.Name == "useModels") != null);
 
-            threadExceptions = new List<LMThreadException>();
-
             List<LightmapGroup> lmGroups = new List<LightmapGroup>();
-            List<LMFace> exclusiveBlockers = new List<LMFace>();
+            var exclusiveBlockers = new ConcurrentBag<LMFace>();
 
             //get faces
             UpdateProgress(exportForm, "Finding faces and determining UV coordinates...", 0);
@@ -185,16 +171,13 @@ namespace CBRE.Editor.Compiling.Lightmap
 
             UpdateProgress(exportForm, "Finding light blocker brushes...", 0.02f);
 
-            foreach (Solid solid in map.WorldSpawn.Find(x => x is Solid).OfType<Solid>())
-            {
-                foreach (Face tface in solid.Faces)
-                {
-                    LMFace face = new LMFace(tface, solid);
+            Parallel.ForEach(map.WorldSpawn.Find(x => x is Solid).Cast<Solid>(), solid => {
+                foreach (Face tface in solid.Faces) {
                     if (tface.Texture.Name.ToLowerInvariant() != "tooltextures/block_light") continue;
-                    blockerCount++;
-                    exclusiveBlockers.Add(face);
+                    Interlocked.Increment(ref blockerCount);
+                    exclusiveBlockers.Add(new(tface, solid));
                 }
-            }
+            });
 
             if (LightmapConfig.BakeModelShadows)
             {
@@ -202,79 +185,75 @@ namespace CBRE.Editor.Compiling.Lightmap
 
                 Dictionary<string, ModelReference> modelReferences = document.GetMemory<Dictionary<string, ModelReference>>("ModelCache");
 
-                foreach (Entity model in modelEntities
-                             .Where(x => x.EntityData.GetPropertyValue("castshadow")?.ToBool() ?? false))
-                {
-                    Coordinate euler = model.EntityData.GetPropertyCoordinate("angles", Coordinate.Zero);
-                    Coordinate scale = model.EntityData.GetPropertyCoordinate("scale", Coordinate.One);
-                    Matrix modelMatrix = Matrix.Translation(model.Origin)
-                                      * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
-                                      * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
-                                      * Matrix.RotationZ(DMath.DegreesToRadians(euler.Y))
-                                      * Matrix.Scale(scale.XZY());
+                Parallel.ForEach(modelEntities
+                        .Where(x => x.EntityData.GetPropertyValue("castshadow")?.ToBool() ?? false),
+                    model => {
+                        Coordinate euler = model.EntityData.GetPropertyCoordinate("angles", Coordinate.Zero);
+                        Coordinate scale = model.EntityData.GetPropertyCoordinate("scale", Coordinate.One);
+                        Matrix modelMatrix = Matrix.Translation(model.Origin)
+                                             * Matrix.RotationX(DMath.DegreesToRadians(euler.X))
+                                             * Matrix.RotationY(DMath.DegreesToRadians(euler.Z))
+                                             * Matrix.RotationZ(DMath.DegreesToRadians(euler.Y))
+                                             * Matrix.Scale(scale.XZY());
 
-                    string modelValue = model.EntityData.GetPropertyValue("file");
+                        string modelValue = model.EntityData.GetPropertyValue("file");
 
-                    if (string.IsNullOrWhiteSpace(modelValue)) continue;
-                    if (!modelReferences.ContainsKey(modelValue)) continue;
+                        if (string.IsNullOrWhiteSpace(modelValue)) return;
+                        if (!modelReferences.TryGetValue(modelValue, out var modelReference)) return;
+                        if (modelReference == null) return;
 
-                    ModelReference modelReference = modelReferences[modelValue];
+                        List<MatrixF> modelTransforms = modelReference.Model.GetTransforms();
+                        IEnumerable<IGrouping<int, Mesh>> meshGroups =
+                            modelReference.Model.GetActiveMeshes().GroupBy(x => x.SkinRef);
 
-                    if (modelReference == null) continue;
+                        foreach (IGrouping<int, Mesh> meshGroup in meshGroups) {
+                            Texture texture = modelReference.Model.Textures[meshGroup.Key];
 
-                    List<MatrixF> modelTransforms = modelReference.Model.GetTransforms();
-                    IEnumerable<IGrouping<int, Mesh>> meshGroups = modelReference.Model.GetActiveMeshes().GroupBy(x => x.SkinRef);
+                            foreach (Mesh mesh in meshGroup) {
+                                Face tFace = new Face(0);
 
-                    foreach (IGrouping<int, Mesh> meshGroup in meshGroups)
-                    {
-                        Texture texture = modelReference.Model.Textures[meshGroup.Key];
+                                tFace.Texture.Name = System.IO.Path.GetFileNameWithoutExtension(texture.Name);
+                                tFace.Texture.Texture = texture.TextureObject;
+                                tFace.Plane = new Plane(Coordinate.UnitY, 1.0m);
+                                tFace.BoundingBox = Box.Empty;
 
-                        foreach (Mesh mesh in meshGroup)
-                        {
-                            Face tFace = new Face(0);
+                                Face mFace = tFace.Clone();
 
-                            tFace.Texture.Name = System.IO.Path.GetFileNameWithoutExtension(texture.Name);
-                            tFace.Texture.Texture = texture.TextureObject;
-                            tFace.Plane = new Plane(Coordinate.UnitY, 1.0m);
-                            tFace.BoundingBox = Box.Empty;
+                                Vertex TransformVertex(MeshVertex vertex)
+                                    => new(new Coordinate(vertex.Location *
+                                                          modelTransforms[
+                                                              vertex.BoneWeightings.First().Bone.BoneIndex]) *
+                                           modelMatrix, mFace) {
+                                        TextureU = (decimal)vertex.TextureU,
+                                        TextureV = (decimal)vertex.TextureV,
+                                    };
 
-                            Face mFace = tFace.Clone();
+                                for (int i = 0; i < mesh.Vertices.Count; i += 3) {
+                                    tFace.Vertices.Clear();
+                                    tFace.Vertices.Add(TransformVertex(mesh.Vertices[i]));
+                                    tFace.Vertices.Add(TransformVertex(mesh.Vertices[i + 1]));
+                                    tFace.Vertices.Add(TransformVertex(mesh.Vertices[i + 2]));
 
-                            List<Vertex> vertices = mesh.Vertices.Select(x => new Vertex(new Coordinate(x.Location *
-                                                                                                        modelTransforms[x.BoneWeightings.First().Bone.BoneIndex]) * modelMatrix, mFace)
-                            {
-                                TextureU = (decimal)x.TextureU,
-                                TextureV = (decimal)x.TextureV
-                            }).ToList();
+                                    tFace.Plane = new(tFace.Vertices[0].Location, tFace.Vertices[1].Location,
+                                        tFace.Vertices[2].Location);
+                                    tFace.Vertices.ForEach(v => {
+                                        v.LMU = -500.0f;
+                                        v.LMV = -500.0f;
+                                    });
 
-                            for (int i = 0; i < mesh.Vertices.Count; i += 3)
-                            {
-                                tFace.Vertices.Clear();
-                                tFace.Vertices.Add(vertices[i]);
-                                tFace.Vertices.Add(vertices[i + 1]);
-                                tFace.Vertices.Add(vertices[i + 2]);
+                                    tFace.UpdateBoundingBox();
 
-                                tFace.Plane = new Plane(tFace.Vertices[0].Location, tFace.Vertices[1].Location, tFace.Vertices[2].Location);
-                                tFace.Vertices.ForEach(v =>
-                                {
-                                    v.LMU = -500.0f;
-                                    v.LMV = -500.0f;
-                                });
+                                    LMFace lmFace = new LMFace(tFace.Clone(), null);
 
-                                tFace.UpdateBoundingBox();
+                                    lmFace.CastsShadows = true;
+                                    lmFace.UpdateBoundingBox();
 
-                                LMFace lmFace = new LMFace(tFace.Clone(), null);
-
-                                lmFace.CastsShadows = true;
-                                lmFace.UpdateBoundingBox();
-
-                                modelBlockerCount++;
-
-                                exclusiveBlockers.Add(lmFace);
+                                    Interlocked.Increment(ref modelBlockerCount);
+                                    exclusiveBlockers.Add(lmFace);
+                                }
                             }
                         }
-                    }
-                }
+                    });
             }
 
             for (int i = 0; i < lmGroups.Count; i++)
@@ -300,10 +279,8 @@ namespace CBRE.Editor.Compiling.Lightmap
                 if (x.Width < y.Width) { return 1; }
                 if (x.Height > y.Height) { return -1; }
                 if (x.Height < y.Height) { return 1; }
-                List<CoordinateF> locXs = x.Faces.SelectMany(f => f.Vertices.Select(v => v.Location)).ToList();
-                CoordinateF locX = locXs.Aggregate((a, b) => a + b) / (float)locXs.Count;
-                List<CoordinateF> locYs = y.Faces.SelectMany(f => f.Vertices.Select(v => v.Location)).ToList();
-                CoordinateF locY = locYs.Aggregate((a, b) => a + b) / (float)locYs.Count;
+                CoordinateF locX = Average(x.Faces.SelectMany(f => f.Vertices.Select(v => v.Location)));
+                CoordinateF locY = Average(y.Faces.SelectMany(f => f.Vertices.Select(v => v.Location)));
                 if (locX.X > locY.X) { return -1; }
                 if (locX.X < locY.X) { return 1; }
                 if (locX.Y > locY.Y) { return -1; }
@@ -311,12 +288,26 @@ namespace CBRE.Editor.Compiling.Lightmap
                 if (locX.Z > locY.Z) { return -1; }
                 if (locX.Z < locY.Z) { return 1; }
                 return 0;
+
+                CoordinateF Average(IEnumerable<CoordinateF> coords) {
+                    var count = 0;
+                    var acc = CoordinateF.Zero;
+                    foreach (var coord in coords) {
+                        acc += coord;
+                        count++;
+                    }
+                    return acc / count;
+                }
             });
 
             UpdateProgress(exportForm, "Finding light entities...", 0.04f);
             Light.FindLights(map, out lightEntities);
 
-            List<LMFace> allBlockers = lmGroups.Select(q => q.Faces).SelectMany(q => q).Where(f => f.CastsShadows).Union(exclusiveBlockers).ToList();
+            List<LMFace> allBlockers = lmGroups.Select(q => q.Faces)
+                .SelectMany(q => q)
+                .Where(f => f.CastsShadows)
+                .Union(exclusiveBlockers)
+                .ToList();
 
             List<LightmapGroup> uvCalcFaces = new List<LightmapGroup>(lmGroups);
 
@@ -343,7 +334,7 @@ namespace CBRE.Editor.Compiling.Lightmap
                 for (int i = 0; i < 4; i++)
                 {
                     textureCollection.Lightmaps[i]?.Dispose();
-                    textureCollection.Lightmaps[i] = new Bitmap(totalTextureDims, totalTextureDims);
+                    textureCollection.Lightmaps[i] = new(totalTextureDims, totalTextureDims);
                     buffers[i] = new float[textureCollection.Lightmaps[i].Width * textureCollection.Lightmaps[i].Height * Bitmap.GetPixelFormatSize(PixelFormat.Format32bppArgb) / 8];
                 }
             }
@@ -611,6 +602,13 @@ namespace CBRE.Editor.Compiling.Lightmap
             
             data.Initialize((uint)iterX, (uint)iterY);
 
+            var faceApplicableBlockerFaces = blockerFaces
+                .Where(x => {
+                    if (x == targetFace) return false;
+                    if (group.Faces.Contains(x)) return false;
+                    return true;
+                });
+            List<LMFace> applicableBlockerFaces = [];
             foreach (Light light in relevantLights)
             {
                 CoordinateF lightPos = light.Origin;
@@ -620,14 +618,9 @@ namespace CBRE.Editor.Compiling.Lightmap
                 BoxF lightBox = BoxF.FromBoxes([targetFace.BoundingBox,
                     new BoxF(light.Origin - new CoordinateF(30.0f, 30.0f, 30.0f),
                         light.Origin + new CoordinateF(30.0f, 30.0f, 30.0f))]);
-                List<LMFace> applicableBlockerFaces = blockerFaces.Where(x =>
-                {
-                    if (x == targetFace) return false;
-                    if (group.Faces.Contains(x)) return false;
-                    //return true;
-                    if (lightBox.IntersectsWith(x.BoundingBox)) return true;
-                    return false;
-                }).ToList();
+                
+                applicableBlockerFaces.Clear();
+                applicableBlockerFaces.AddRange(faceApplicableBlockerFaces.Where(x => lightBox.IntersectsWith(x.BoundingBox)));
 
                 data.SetFullyIlluminated();
 
@@ -690,7 +683,6 @@ namespace CBRE.Editor.Compiling.Lightmap
                                     applicableBlockerFaces.RemoveAt(i);
                                     applicableBlockerFaces.Insert(0, otherFace);
                                     data.Illuminated(x, y) = false;
-                                    i++;
                                     break;
                                 }
                             }
@@ -732,21 +724,21 @@ namespace CBRE.Editor.Compiling.Lightmap
                             brightness2 += ((float)rand.NextDouble() - 0.5f) * 0.005f;
                             brightnessNorm += ((float)rand.NextDouble() - 0.5f) * 0.005f;
 
-                            data.R(0, x, y) += lightColor.Z * brightness0; if (data.R(0, x, y) > 1.0f) data.R(0, x, y) = 1.0f; if (data.R(0, x, y) < 0) data.R(0, x, y) = 0;
-                            data.G(0, x, y) += lightColor.Y * brightness0; if (data.G(0, x, y) > 1.0f) data.G(0, x, y) = 1.0f; if (data.G(0, x, y) < 0) data.G(0, x, y) = 0;
-                            data.B(0, x, y) += lightColor.X * brightness0; if (data.B(0, x, y) > 1.0f) data.B(0, x, y) = 1.0f; if (data.B(0, x, y) < 0) data.B(0, x, y) = 0;
+                            data.R(0, x, y) = Math.Max(0f, Math.Min(1f, data.R(0, x, y) + lightColor.Z * brightness0));
+                            data.G(0, x, y) = Math.Max(0f, Math.Min(1f, data.G(0, x, y) + lightColor.Y * brightness0));
+                            data.B(0, x, y) = Math.Max(0f, Math.Min(1f, data.B(0, x, y) + lightColor.X * brightness0));
 
-                            data.R(1, x, y) += lightColor.Z * brightness1; if (data.R(1, x, y) > 1.0f) data.R(1, x, y) = 1.0f; if (data.R(1, x, y) < 0) data.R(1, x, y) = 0;
-                            data.G(1, x, y) += lightColor.Y * brightness1; if (data.G(1, x, y) > 1.0f) data.G(1, x, y) = 1.0f; if (data.G(1, x, y) < 0) data.G(1, x, y) = 0;
-                            data.B(1, x, y) += lightColor.X * brightness1; if (data.B(1, x, y) > 1.0f) data.B(1, x, y) = 1.0f; if (data.B(1, x, y) < 0) data.B(1, x, y) = 0;
+                            data.R(1, x, y) = Math.Max(0f, Math.Min(1f, data.R(1, x, y) + lightColor.Z * brightness1));
+                            data.G(1, x, y) = Math.Max(0f, Math.Min(1f, data.G(1, x, y) + lightColor.Y * brightness1));
+                            data.B(1, x, y) = Math.Max(0f, Math.Min(1f, data.B(1, x, y) + lightColor.X * brightness1));
 
-                            data.R(2, x, y) += lightColor.Z * brightness2; if (data.R(2, x, y) > 1.0f) data.R(2, x, y) = 1.0f; if (data.R(2, x, y) < 0) data.R(2, x, y) = 0;
-                            data.G(2, x, y) += lightColor.Y * brightness2; if (data.G(2, x, y) > 1.0f) data.G(2, x, y) = 1.0f; if (data.G(2, x, y) < 0) data.G(2, x, y) = 0;
-                            data.B(2, x, y) += lightColor.X * brightness2; if (data.B(2, x, y) > 1.0f) data.B(2, x, y) = 1.0f; if (data.B(2, x, y) < 0) data.B(2, x, y) = 0;
+                            data.R(2, x, y) = Math.Max(0f, Math.Min(1f, data.R(2, x, y) + lightColor.Z * brightness2));
+                            data.G(2, x, y) = Math.Max(0f, Math.Min(1f, data.G(2, x, y) + lightColor.Y * brightness2));
+                            data.B(2, x, y) = Math.Max(0f, Math.Min(1f, data.B(2, x, y) + lightColor.X * brightness2));
                             
-                            data.R(3, x, y) += lightColor.Z * brightnessNorm; if (data.R(3, x, y) > 1.0f) data.R(3, x, y) = 1.0f; if (data.R(3, x, y) < 0) data.R(3, x, y) = 0;
-                            data.G(3, x, y) += lightColor.Y * brightnessNorm; if (data.G(3, x, y) > 1.0f) data.G(3, x, y) = 1.0f; if (data.G(3, x, y) < 0) data.G(3, x, y) = 0;
-                            data.B(3, x, y) += lightColor.X * brightnessNorm; if (data.B(3, x, y) > 1.0f) data.B(3, x, y) = 1.0f; if (data.B(3, x, y) < 0) data.B(3, x, y) = 0;
+                            data.R(3, x, y) = Math.Max(0f, Math.Min(1f, data.R(3, x, y) + lightColor.Z * brightnessNorm));
+                            data.G(3, x, y) = Math.Max(0f, Math.Min(1f, data.G(3, x, y) + lightColor.Y * brightnessNorm));
+                            data.B(3, x, y) = Math.Max(0f, Math.Min(1f, data.B(3, x, y) + lightColor.X * brightnessNorm));
 
                             luxelColor0 = new(data.R(0, x, y), data.G(0, x, y), data.B(0, x, y));
                             luxelColor1 = new(data.R(1, x, y), data.G(1, x, y), data.B(1, x, y));

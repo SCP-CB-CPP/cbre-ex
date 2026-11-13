@@ -72,12 +72,12 @@ namespace CBRE.DataStructures.Geometric
 
         public float LengthSquared()
         {
-            return (float)(Math.Pow(X, 2) + Math.Pow(Y, 2) + Math.Pow(Z, 2));
+            return X * X + Y * Y + Z * Z;
         }
 
         public float VectorMagnitude()
         {
-            return (float)Math.Sqrt(Math.Pow(X, 2) + Math.Pow(Y, 2) + Math.Pow(Z, 2));
+            return (float)Math.Sqrt(X * X + Y * Y + Z * Z);
         }
 
         public CoordinateF Normalise()
